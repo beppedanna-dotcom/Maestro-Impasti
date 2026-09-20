@@ -34,7 +34,7 @@ In panificazione non serve memorizzare decine di trucchi magici: la Teoria del M
 * 📖 **Scuola Passo-Passo:** Una guida fase per fase (dall'autolisi alla cottura) con timer sonoro incorporato e la spiegazione del Maestro sul perché funziona ogni passaggio.
 * 🛟 **Pronto Soccorso (Troubleshooting):** Diagnosi istantanea di problemi come "impasto appiccicoso", "impasto elastico che si ritira", "panetti sgonfi", "crosta pallida", ecc.
 * ✨ **Teoria del Maestro & Glossario:** La guida sintetica alla forza delle farine (W), alle proteine da cercare al supermercato e ai trucchi per il forno domestico.
-* 📜 **Diario degli Impasti:** Salva i tuoi esperimenti sul tuo browser con voti e note per migliorare ad ogni infornata.
+* 📜 **Diario degli Impasti:** Salva i tuoi esperimenti sul tuo browser con voti e note per migliorare ad ogni infornata..
 
 ---
 
