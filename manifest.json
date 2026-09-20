@@ -1,0 +1,47 @@
+{
+  "name": "Maestro degli Impasti",
+  "short_name": "Maestro Impasti",
+  "description": "Calcolatore scientifico Baker's Math, ricette con Biga/Poolish, Scuola di Panificazione e Pronto Soccorso AI per pizzaioli",
+  "start_url": "./index.html",
+  "id": "maestro-degli-impasti",
+  "display": "standalone",
+  "background_color": "#1c1917",
+  "theme_color": "#b45309",
+  "orientation": "portrait-primary",
+  "lang": "it",
+  "dir": "ltr",
+  "categories": [
+    "food",
+    "lifestyle",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/feature-graphic.png",
+      "sizes": "1024x500",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Maestro degli Impasti - Teoria del Maestro"
+    }
+  ]
+}

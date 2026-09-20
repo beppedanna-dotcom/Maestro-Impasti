@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calcolatore scientifico per pizza, pane e focaccia con formula del fornaio, Biga, Poolish e Pronto Soccorso AI.">
+  <meta name="theme-color" content="#b45309">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Maestro degli Impasti">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <title>Maestro degli Impasti | Scuola Scientifica e Teoria del Maestro</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dough: {
+              50: '#fdfbf7',
+              100: '#f9f4ea',
+              200: '#f2e6cf',
+              300: '#e7d1ab',
+              500: '#cf9d4e',
+              600: '#b8813a',
+              700: '#94602d',
+              800: '#794d28',
+              900: '#462b16',
+            },
+            crust: {
+              DEFAULT: '#b45309',
+              dark: '#78350f',
+              accent: '#d97706'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-serif-display {
+      font-family: 'Playfair Display', serif;
+    }
+    /* Stile personalizzato per gli slider */
+    input[type=range]::-webkit-slider-thumb {
+      background-color: #b45309;
+      cursor: pointer;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      header, footer, nav, #floating-timer-bar, #timer-modal, #gemini-key-modal, #journal-modal, .no-print, button {
+        display: none !important;
+      }
+      #print-sheet {
+        display: block !important;
+      }
+      .tab-content {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-stone-100 text-stone-800 min-h-screen flex flex-col antialiased selection:bg-amber-200">
+
+  <!-- Header & Navigation -->
+  <header class="bg-stone-900 text-stone-100 sticky top-0 z-50 shadow-md border-b border-stone-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        
+        <!-- Logo e Titolo -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('calculator')">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-900/50">
+            <i data-lucide="flame" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="font-serif-display text-xl sm:text-2xl font-bold tracking-tight text-amber-100 flex items-center gap-2">
+              Maestro degli Impasti
+              <span class="text-xs bg-amber-500/20 text-amber-400 font-sans font-semibold px-2 py-0.5 rounded-full border border-amber-500/30">Teoria del Maestro</span>
+            </h1>
+            <p class="text-xs text-stone-400 hidden sm:block">Pizza • Pane • Focacce con la formula del fornaio</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs Desktop -->
+        <nav class="hidden md:flex items-center space-x-1 bg-stone-800/70 p-1.5 rounded-xl border border-stone-700/60">
+          <button onclick="switchTab('calculator')" id="nav-calculator" class="nav-tab active px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-stone-200 hover:text-white">
+            <i data-lucide="calculator" class="w-4 h-4"></i> Calcolatore
+          </button>
+          <button onclick="switchTab('academy')" id="nav-academy" class="nav-tab px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-stone-400 hover:text-white">
+            <i data-lucide="book-open" class="w-4 h-4"></i> Scuola Passo-Passo
+          </button>
+          <button onclick="switchTab('troubleshooter')" id="nav-troubleshooter" class="nav-tab px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-stone-400 hover:text-white">
+            <i data-lucide="life-buoy" class="w-4 h-4"></i> Pronto Soccorso
+          </button>
+          <button onclick="switchTab('theory')" id="nav-theory" class="nav-tab px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-stone-400 hover:text-white">
+            <i data-lucide="sparkles" class="w-4 h-4"></i> Teoria del Maestro
+          </button>
+          <button onclick="switchTab('journal')" id="nav-journal" class="nav-tab px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-stone-400 hover:text-white">
+            <i data-lucide="scroll" class="w-4 h-4"></i> Diario
+          </button>
+        </nav>
+
+        <!-- Status / Timer Badge Cliccabile con Stop -->
+        <div id="active-timer-pill" onclick="stopActiveTimer()" title="Clicca per interrompere il timer" class="hidden items-center gap-2 bg-amber-950/90 hover:bg-red-950 border border-amber-500/80 hover:border-red-500 text-amber-200 hover:text-white px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition shadow-lg select-none">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          <i data-lucide="timer" class="w-4 h-4 text-amber-400"></i>
+          <span id="active-timer-display" class="font-mono font-bold tracking-wider">00:00</span>
+          <span class="bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ml-1 shadow-sm">
+            <i data-lucide="square" class="w-2.5 h-2.5 fill-current"></i> STOP
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Nav Bar (Bottom Bar) -->
+    <div class="md:hidden flex justify-around bg-stone-900 border-t border-stone-800 py-2.5 px-2">
+      <button onclick="switchTab('calculator')" class="flex flex-col items-center text-xs font-medium mobile-nav-btn text-amber-500" data-tab="calculator">
+        <i data-lucide="calculator" class="w-5 h-5 mb-1"></i>
+        <span>Calcolo</span>
+      </button>
+      <button onclick="switchTab('academy')" class="flex flex-col items-center text-xs font-medium mobile-nav-btn text-stone-400" data-tab="academy">
+        <i data-lucide="book-open" class="w-5 h-5 mb-1"></i>
+        <span>Scuola</span>
+      </button>
+      <button onclick="switchTab('troubleshooter')" class="flex flex-col items-center text-xs font-medium mobile-nav-btn text-stone-400" data-tab="troubleshooter">
+        <i data-lucide="life-buoy" class="w-5 h-5 mb-1"></i>
+        <span>Soccorso</span>
+      </button>
+      <button onclick="switchTab('theory')" class="flex flex-col items-center text-xs font-medium mobile-nav-btn text-stone-400" data-tab="theory">
+        <i data-lucide="sparkles" class="w-5 h-5 mb-1"></i>
+        <span>Teoria</span>
+      </button>
+      <button onclick="switchTab('journal')" class="flex flex-col items-center text-xs font-medium mobile-nav-btn text-stone-400" data-tab="journal">
+        <i data-lucide="scroll" class="w-5 h-5 mb-1"></i>
+        <span>Diario</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- ============================================================= -->
+    <!-- TAB 1: CALCOLATORE SCIENTIFICO                                -->
+    <!-- ============================================================= -->
+    <section id="tab-calculator" class="tab-content block space-y-6">
+      
+      <!-- Selettore Livello Esperienza (Principiante vs Pro) -->
+      <div class="flex flex-col sm:flex-row items-center justify-between bg-white p-3.5 sm:p-4 rounded-2xl border border-stone-200/90 shadow-sm gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-700"></i>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+              <span>Modalità di Utilizzo</span>
+              <span id="badge-experience-level" class="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.2 rounded-full">Semplice</span>
+            </div>
+            <div class="text-[11px] text-stone-500" id="experience-mode-desc">Principiante: dosaggi perfetti e intuitivi senza complicazioni</div>
+          </div>
+        </div>
+        
+        <div class="flex items-center bg-stone-100/80 p-1 rounded-xl border border-stone-200">
+          <button type="button" onclick="setExperienceMode('beginner')" id="btn-mode-beginner" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-stone-900 shadow-sm">
+            <span>👶 Semplice (Principiante)</span>
+          </button>
+          <button type="button" onclick="setExperienceMode('pro')" id="btn-mode-pro" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-stone-500 hover:text-stone-800">
+            <span>⚡ Esperto (Pizzaiolo Pro)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid Calcolatore -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Colonna Sinistra: Controlli e Slider (7 cols) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl p-5 sm:p-7 shadow-sm border border-stone-200/80 space-y-6">
+
+          <!-- 1. SELETTORE MACRO-CATEGORIA E SOTTOMENU STILE -->
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <label class="block text-xs font-bold uppercase tracking-wider text-stone-500">
+                1. Scegli Categoria e Stile
+              </label>
+              <span id="current-recipe-badge" class="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                Pizza Napoletana
+              </span>
+            </div>
+
+            <!-- Categorie Principali (Pizza, Focaccia, Pane) -->
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="selectCategory('pizza')" id="cat-btn-pizza" class="category-btn active p-2.5 rounded-xl border text-center font-bold text-xs transition flex items-center justify-center gap-1.5 bg-amber-50 border-amber-500 text-amber-950 shadow-sm cursor-pointer">
+                <span>🍕 Pizza</span>
+              </button>
+              <button type="button" onclick="selectCategory('focaccia')" id="cat-btn-focaccia" class="category-btn p-2.5 rounded-xl border text-center font-bold text-xs transition flex items-center justify-center gap-1.5 bg-white border-stone-200 text-stone-700 hover:bg-stone-50 cursor-pointer">
+                <span>🍞 Focaccia</span>
+              </button>
+              <button type="button" onclick="selectCategory('pane')" id="cat-btn-pane" class="category-btn p-2.5 rounded-xl border text-center font-bold text-xs transition flex items-center justify-center gap-1.5 bg-white border-stone-200 text-stone-700 hover:bg-stone-50 cursor-pointer">
+                <span>🥖 Pane</span>
+              </button>
+            </div>
+
+            <!-- Sottomenu Stili Specifici Dinamico (es. Classica, Napoletana, Teglia) -->
+            <div>
+              <div class="text-[11px] font-semibold text-stone-600 mb-1.5">Scegli lo stile specifico:</div>
+              <div id="styles-submenu-container" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <!-- Popolato dinamicamente da app.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. SELETTORE METODO (DIRETTO, BIGA, POOLISH) -->
+          <div class="space-y-2.5 pt-2 border-t border-stone-100">
+            <div class="flex justify-between items-center">
+              <label class="block text-xs font-bold uppercase tracking-wider text-stone-500">
+                2. Metodo di Impasto
+              </label>
+              <span id="method-difficulty-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-800">
+                Consigliato Principianti
+              </span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="setDoughMethod('direct')" id="method-btn-direct" class="method-btn active p-2.5 rounded-xl border text-left transition flex flex-col justify-between bg-amber-50 border-amber-500 text-amber-900 shadow-sm cursor-pointer">
+                <div class="flex items-center justify-between">
+                  <i data-lucide="zap" class="w-4 h-4 text-amber-600"></i>
+                  <span class="text-[9px] font-bold bg-green-200/80 text-green-900 px-1.5 py-0.2 rounded">1 Fase</span>
+                </div>
+                <div class="mt-1">
+                  <div class="font-bold text-xs">Diretto</div>
+                  <div class="text-[10px] text-stone-500 font-normal">Tutto insieme</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="setDoughMethod('biga')" id="method-btn-biga" class="method-btn p-2.5 rounded-xl border text-left transition flex flex-col justify-between bg-white border-stone-200 text-stone-700 hover:bg-stone-50 cursor-pointer">
+                <div class="flex items-center justify-between">
+                  <i data-lucide="layers" class="w-4 h-4 text-stone-500"></i>
+                  <span class="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">Solido</span>
+                </div>
+                <div class="mt-1">
+                  <div class="font-bold text-xs">Biga</div>
+                  <div class="text-[10px] text-stone-500 font-normal">16-24h (45% idro)</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="setDoughMethod('poolish')" id="method-btn-poolish" class="method-btn p-2.5 rounded-xl border text-left transition flex flex-col justify-between bg-white border-stone-200 text-stone-700 hover:bg-stone-50 cursor-pointer">
+                <div class="flex items-center justify-between">
+                  <i data-lucide="droplets" class="w-4 h-4 text-stone-500"></i>
+                  <span class="text-[9px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">Liquido</span>
+                </div>
+                <div class="mt-1">
+                  <div class="font-bold text-xs">Poolish</div>
+                  <div class="text-[10px] text-stone-500 font-normal">8-16h (100% idro)</div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Box Spiegazione 'Cosa si Ottiene' -->
+            <div id="method-explanation-card" class="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 text-xs space-y-1">
+              <div class="font-bold text-amber-900 flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span id="method-explanation-title">Cosa ottieni con l'Impasto Diretto:</span>
+              </div>
+              <p class="text-stone-700 leading-relaxed text-[11px]" id="method-explanation-text">
+                Processo lineare e senza attese: ideale per imparare la manualità senza dover preparare pre-fermenti il giorno prima.
+              </p>
+            </div>
+
+            <!-- Selettore % Biga/Poolish (visibile quando selezionato o in Pro Mode) -->
+            <div id="preferment-percentage-row" class="hidden bg-stone-50 p-3 rounded-xl border border-stone-200 space-y-1.5">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-stone-700" id="label-preferment-pct-title">% Farina nel Pre-fermento</label>
+                <span id="display-preferment-pct" class="font-bold text-amber-700 text-xs">50%</span>
+              </div>
+              <input type="range" id="input-preferment-pct" min="20" max="100" step="5" value="50" oninput="onPrefermentPctChange(this.value)" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+              <div class="flex justify-between text-[10px] text-stone-400">
+                <span>20% (Leggero)</span>
+                <span>50% (Standard)</span>
+                <span>100% (100% Biga Pro)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panetti & Peso Totale con Input Diretti e Slider -->
+          <div class="bg-stone-50/80 rounded-xl p-4 border border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-stone-700">Numero Panetti / Porzioni</label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="input-num-panetti-val" min="1" max="50" value="4" oninput="syncFromInput('panetti', this.value)" class="w-14 px-1.5 py-0.5 text-right font-bold text-amber-700 text-xs bg-white border border-stone-300 rounded-md focus:ring-1 focus:ring-amber-500">
+                </div>
+              </div>
+              <input type="range" id="input-num-panetti" min="1" max="20" value="4" oninput="syncFromSlider('panetti', this.value)" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+              <p class="text-[11px] text-stone-500 mt-1">Es. 4 panetti per 4 persone</p>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-stone-700">Peso per Panetto / Teglia</label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="input-weight-panetto-val" min="50" max="2000" step="5" value="260" oninput="syncFromInput('weight', this.value)" class="w-16 px-1.5 py-0.5 text-right font-bold text-amber-700 text-xs bg-white border border-stone-300 rounded-md focus:ring-1 focus:ring-amber-500">
+                  <span class="text-xs font-bold text-stone-500">g</span>
+                </div>
+              </div>
+              <input type="range" id="input-weight-panetto" min="150" max="1500" step="10" value="260" oninput="syncFromSlider('weight', this.value)" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+              <p class="text-[11px] text-stone-500 mt-1" id="desc-weight-help">260g = pizza tonda standard</p>
+            </div>
+          </div>
+
+          <!-- Idratazione Slider & Input Diretto -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-bold text-stone-800">Idratazione Acqua</label>
+                <span id="badge-difficolta-idro" class="text-[11px] px-2 py-0.5 rounded-full font-bold bg-green-100 text-green-800">
+                  Facile da gestire
+                </span>
+              </div>
+              <div class="flex items-center gap-1">
+                <input type="number" id="input-hydration-val" min="45" max="95" step="1" value="65" oninput="syncFromInput('hydration', this.value)" class="w-14 px-1.5 py-0.5 text-right font-black text-amber-700 text-sm bg-white border border-stone-300 rounded-md focus:ring-1 focus:ring-amber-500">
+                <span class="text-sm font-bold text-amber-700">%</span>
+              </div>
+            </div>
+            <input type="range" id="input-hydration" min="50" max="90" step="1" value="65" oninput="syncFromSlider('hydration', this.value)" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+            <div class="flex justify-between text-[11px] text-stone-400 font-medium px-1">
+              <span>55% (Pizza croccante)</span>
+              <span>65% (Napoletana)</span>
+              <span>75% (Focaccia)</span>
+              <span>85% (Ciabatta/Teglia)</span>
+            </div>
+          </div>
+
+          <!-- Tipo di Lievito -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">
+              Tipo di Lievito
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button type="button" onclick="setYeastType('fresh')" id="yeast-btn-fresh" class="yeast-tab-btn active p-2.5 rounded-xl border text-center text-xs font-bold transition flex flex-col items-center gap-1 bg-amber-50 border-amber-500 text-amber-900 shadow-sm">
+                <i data-lucide="box" class="w-4 h-4 text-amber-600"></i>
+                <span>Birra Fresco</span>
+                <span class="text-[10px] text-stone-500 font-normal">Cubetto classico</span>
+              </button>
+              <button type="button" onclick="setYeastType('dry')" id="yeast-btn-dry" class="yeast-tab-btn p-2.5 rounded-xl border text-center text-xs font-bold transition flex flex-col items-center gap-1 bg-white border-stone-200 text-stone-700 hover:bg-stone-50">
+                <i data-lucide="feather" class="w-4 h-4 text-stone-500"></i>
+                <span>Birra Secco</span>
+                <span class="text-[10px] text-stone-500 font-normal">Bustina (1/3 dose)</span>
+              </button>
+              <button type="button" onclick="setYeastType('solid')" id="yeast-btn-solid" class="yeast-tab-btn p-2.5 rounded-xl border text-center text-xs font-bold transition flex flex-col items-center gap-1 bg-white border-stone-200 text-stone-700 hover:bg-stone-50">
+                <i data-lucide="cookie" class="w-4 h-4 text-stone-500"></i>
+                <span>Madre Solida</span>
+                <span class="text-[10px] text-stone-500 font-normal">Pasta madre 50%</span>
+              </button>
+              <button type="button" onclick="setYeastType('licoli')" id="yeast-btn-licoli" class="yeast-tab-btn p-2.5 rounded-xl border text-center text-xs font-bold transition flex flex-col items-center gap-1 bg-white border-stone-200 text-stone-700 hover:bg-stone-50">
+                <i data-lucide="droplets" class="w-4 h-4 text-stone-500"></i>
+                <span>Licoli</span>
+                <span class="text-[10px] text-stone-500 font-normal">Madre Liquido 100%</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Temperatura & Tempi di Lievitazione -->
+          <div class="bg-stone-50/90 rounded-xl p-4 border border-stone-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-stone-700">Temp. Ambiente</label>
+                <span id="label-room-temp" class="font-bold text-stone-800 text-xs">21°C</span>
+              </div>
+              <input type="range" id="input-room-temp" min="16" max="32" value="21" oninput="updateCalculator()" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+              <p class="text-[10px] text-stone-500 mt-1">Caldo accelera lievito</p>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-stone-700">Ore Fuori Frigo</label>
+                <span id="label-room-hours" class="font-bold text-stone-800 text-xs">8 ore</span>
+              </div>
+              <input type="range" id="input-room-hours" min="1" max="24" value="8" oninput="updateCalculator()" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+              <p class="text-[10px] text-stone-500 mt-1">Puntata + appretto</p>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-stone-700">Ore in Frigo (4°C)</label>
+                <span id="label-fridge-hours" class="font-bold text-stone-800 text-xs">8 ore</span>
+              </div>
+              <input type="range" id="input-fridge-hours" min="0" max="72" step="2" value="8" oninput="updateCalculator()" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+              <p class="text-[10px] text-stone-500 mt-1">Maturazione aromi</p>
+            </div>
+          </div>
+
+          <!-- SELEZIONE FORNO A DISPOSIZIONE -->
+          <div class="space-y-2.5">
+            <div class="flex justify-between items-center">
+              <label class="block text-xs font-bold uppercase tracking-wider text-stone-500">
+                Il Tuo Forno a Disposizione
+              </label>
+              <span id="label-selected-oven-temp" class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                Max 250°C
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <!-- Forno Casa -->
+              <button type="button" onclick="setOvenType('home_standard')" id="oven-btn-home_standard" class="oven-tab-btn active p-3 rounded-xl border text-left text-xs transition flex flex-col justify-between gap-1.5 bg-amber-50 border-amber-500 text-amber-900 shadow-sm">
+                <div class="flex items-center justify-between">
+                  <i data-lucide="home" class="w-4 h-4 text-amber-600"></i>
+                  <span class="text-[10px] font-bold bg-amber-200/60 text-amber-800 px-1.5 py-0.2 rounded">250°C</span>
+                </div>
+                <div>
+                  <div class="font-bold">Forno di Casa</div>
+                  <div class="text-[10px] text-stone-500">Classico statico/vent.</div>
+                </div>
+              </button>
+
+              <!-- Fornetto Elettrico -->
+              <button type="button" onclick="setOvenType('electric_pizza')" id="oven-btn-electric_pizza" class="oven-tab-btn p-3 rounded-xl border text-left text-xs transition flex flex-col justify-between gap-1.5 bg-white border-stone-200 text-stone-700 hover:bg-stone-50">
+                <div class="flex items-center justify-between">
+                  <i data-lucide="zap" class="w-4 h-4 text-stone-500"></i>
+                  <span class="text-[10px] font-bold bg-stone-100 text-stone-600 px-1.5 py-0.2 rounded">400-500°</span>
+                </div>
+                <div>
+                  <div class="font-bold">Fornetto Elettrico</div>
+                  <div class="text-[10px] text-stone-500">G3 Ferrari / Effeuno</div>
+                </div>
+              </button>
+
+              <!-- Forno a Gas -->
+              <button type="button" onclick="setOvenType('gas_portable')" id="oven-btn-gas_portable" class="oven-tab-btn p-3 rounded-xl border text-left text-xs transition flex flex-col justify-between gap-1.5 bg-white border-stone-200 text-stone-700 hover:bg-stone-50">
+                <div class="flex items-center justify-between">
+                  <i data-lucide="flame" class="w-4 h-4 text-stone-500"></i>
+                  <span class="text-[10px] font-bold bg-stone-100 text-stone-600 px-1.5 py-0.2 rounded">450-500°</span>
+                </div>
+                <div>
+                  <div class="font-bold">Forno a Gas</div>
+                  <div class="text-[10px] text-stone-500">Ooni / Munaciello</div>
+                </div>
+              </button>
+
+              <!-- Forno a Legna -->
+              <button type="button" onclick="setOvenType('wood_fired')" id="oven-btn-wood_fired" class="oven-tab-btn p-3 rounded-xl border text-left text-xs transition flex flex-col justify-between gap-1.5 bg-white border-stone-200 text-stone-700 hover:bg-stone-50">
+                <div class="flex items-center justify-between">
+                  <i data-lucide="trees" class="w-4 h-4 text-stone-500"></i>
+                  <span class="text-[10px] font-bold bg-stone-100 text-stone-600 px-1.5 py-0.2 rounded">450-500°</span>
+                </div>
+                <div>
+                  <div class="font-bold">Forno a Legna</div>
+                  <div class="text-[10px] text-stone-500">Tradizionale a cupola</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Toggle Parametri Avanzati (Sale, Olio, Zucchero) -->
+          <div>
+            <button type="button" onclick="toggleAdvancedParams()" class="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 transition">
+              <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+              <span id="advanced-toggle-text">Mostra opzioni avanzate (Sale %, Olio %, Malto %)</span>
+            </button>
+            <div id="advanced-params-panel" class="hidden mt-3 p-4 bg-stone-50 rounded-xl border border-stone-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="text-xs font-bold text-stone-700 block mb-1">Sale sulla farina (%)</label>
+                <input type="number" id="input-salt-pct" step="0.1" min="1.5" max="4.0" value="2.8" onchange="updateCalculator()" class="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm">
+                <span class="text-[10px] text-stone-500">Standard 2.5% - 2.8%</span>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-stone-700 block mb-1">Olio EVO (%)</label>
+                <input type="number" id="input-oil-pct" step="0.5" min="0" max="10" value="0" onchange="updateCalculator()" class="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm">
+                <span class="text-[10px] text-stone-500">Napoletana 0%, Focaccia 4-6%</span>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-stone-700 block mb-1">Malto / Miele (%)</label>
+                <input type="number" id="input-sugar-pct" step="0.2" min="0" max="3" value="0" onchange="updateCalculator()" class="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm">
+                <span class="text-[10px] text-stone-500">Aiuta doratura in forni casalinghi</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Colonna Destra: Risultato Grammi & Dettaglio Farina (5 cols) -->
+        <div class="lg:col-span-5 space-y-5">
+          
+          <!-- Card Risultato Principale -->
+          <div class="bg-gradient-to-b from-stone-900 to-stone-950 rounded-2xl p-6 text-white shadow-xl border border-stone-800 space-y-6">
+            <div class="flex justify-between items-center border-b border-stone-800 pb-4">
+              <div>
+                <h3 class="font-serif-display text-xl font-bold text-amber-300">Ingredienti Esatti</h3>
+                <p class="text-xs text-stone-400">Peso totale impasto: <span id="res-total-weight" class="text-amber-200 font-bold">1040g</span></p>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="copyRecipeToClipboard()" title="Copia ricetta formattata per WhatsApp / Note" class="px-2.5 py-1.5 bg-stone-800 hover:bg-amber-600 text-stone-300 hover:text-white rounded-xl text-xs font-semibold border border-stone-700 transition flex items-center gap-1 cursor-pointer">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span class="hidden sm:inline">Copia</span>
+                </button>
+                <button onclick="printRecipeCard()" title="Stampa scheda da banco per la cucina" class="px-2.5 py-1.5 bg-stone-800 hover:bg-amber-600 text-stone-300 hover:text-white rounded-xl text-xs font-semibold border border-stone-700 transition flex items-center gap-1 cursor-pointer">
+                  <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                  <span class="hidden sm:inline">Stampa</span>
+                </button>
+                <button onclick="saveCurrentToJournalModal()" title="Salva nel diario" class="p-2 bg-stone-800 hover:bg-stone-700 rounded-xl text-stone-300 hover:text-white transition cursor-pointer">
+                  <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Griglia Ingredienti in grammi -->
+            <div class="grid grid-cols-2 gap-3.5">
+              
+              <!-- Farina -->
+              <div class="bg-stone-800/80 p-3.5 rounded-xl border border-stone-700/80">
+                <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
+                  <span class="flex items-center gap-1"><i data-lucide="wheat" class="w-3.5 h-3.5 text-amber-400"></i> Farina (100%)</span>
+                </div>
+                <div class="text-2xl font-black text-white" id="res-flour">619 g</div>
+              </div>
+
+              <!-- Acqua -->
+              <div class="bg-stone-800/80 p-3.5 rounded-xl border border-stone-700/80">
+                <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
+                  <span class="flex items-center gap-1"><i data-lucide="droplet" class="w-3.5 h-3.5 text-blue-400"></i> Acqua (<span id="res-hydration-label">65</span>%)</span>
+                </div>
+                <div class="text-2xl font-black text-blue-300" id="res-water">402 g</div>
+              </div>
+
+              <!-- Lievito -->
+              <div class="bg-stone-800/80 p-3.5 rounded-xl border border-stone-700/80">
+                <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
+                  <span class="flex items-center gap-1"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Lievito (<span id="res-yeast-type-label">Fresco</span>)</span>
+                </div>
+                <div class="text-2xl font-black text-amber-400" id="res-yeast">1.2 g</div>
+              </div>
+
+              <!-- Sale -->
+              <div class="bg-stone-800/80 p-3.5 rounded-xl border border-stone-700/80">
+                <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
+                  <span class="flex items-center gap-1"><i data-lucide="hash" class="w-3.5 h-3.5 text-stone-400"></i> Sale fino</span>
+                </div>
+                <div class="text-2xl font-black text-stone-200" id="res-salt">17.3 g</div>
+              </div>
+
+            </div>
+
+            <!-- Grassi o Zuccheri opzionali -->
+            <div id="res-optional-ingredients" class="space-y-2 border-t border-stone-800/80 pt-3">
+              <div id="res-oil-row" class="hidden flex justify-between items-center text-sm">
+                <span class="text-stone-400 flex items-center gap-1.5"><i data-lucide="cup-soda" class="w-4 h-4 text-yellow-500"></i> Olio Extravergine:</span>
+                <span class="font-bold text-white" id="res-oil">0 g</span>
+              </div>
+              <div id="res-sugar-row" class="hidden flex justify-between items-center text-sm">
+                <span class="text-stone-400 flex items-center gap-1.5"><i data-lucide="sun" class="w-4 h-4 text-orange-400"></i> Malto / Zucchero:</span>
+                <span class="font-bold text-white" id="res-sugar">0 g</span>
+              </div>
+            </div>
+
+            <!-- Avviso pasta madre se applicabile -->
+            <div id="sourdough-note-box" class="hidden bg-amber-900/40 border border-amber-600/40 p-3 rounded-xl text-xs text-amber-200 leading-relaxed">
+              <i data-lucide="info" class="w-4 h-4 inline-block mr-1 text-amber-400"></i>
+              <span id="sourdough-note-text"></span>
+            </div>
+
+            <!-- Bottone Avvia Scuola con questa ricetta -->
+            <button onclick="startAcademyWithCurrentRecipe()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-amber-900/40 transition cursor-pointer">
+              <i data-lucide="play" class="w-4 h-4"></i> Inizia la Guida Passo-Passo
+            </button>
+          </div>
+
+          <!-- SCOMPOSIZIONE PRE-FERMENTO (BIGA / POOLISH) -->
+          <div id="preferment-breakdown-card" class="hidden bg-stone-900 rounded-2xl p-5 border border-amber-500/40 text-white space-y-4 shadow-xl">
+            <div class="flex items-center justify-between border-b border-stone-800 pb-3">
+              <div class="font-serif-display font-bold text-amber-300 flex items-center gap-2">
+                <i data-lucide="git-branch" class="w-4 h-4 text-amber-400"></i>
+                <span id="breakdown-title">Scomposizione Pre-fermento</span>
+              </div>
+              <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-500/30">
+                2 Fasi
+              </span>
+            </div>
+
+            <!-- Fase 1: Pre-fermento -->
+            <div class="bg-stone-800/90 p-3.5 rounded-xl border border-stone-700/80 space-y-2 text-xs">
+              <div class="flex items-center justify-between font-bold text-amber-200">
+                <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-400"></i> 1. Il Giorno Prima (<span id="breakdown-prep-name">Biga</span>)</span>
+                <span id="breakdown-prep-temp" class="text-[10px] text-amber-300/80 font-normal">16-18°C</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center pt-1 font-mono">
+                <div class="bg-stone-900/80 p-2 rounded-lg border border-stone-700/60">
+                  <div class="text-[10px] text-stone-400 font-sans">Farina</div>
+                  <div class="font-bold text-white text-base" id="breakdown-pref-flour">310 g</div>
+                </div>
+                <div class="bg-stone-900/80 p-2 rounded-lg border border-stone-700/60">
+                  <div class="text-[10px] text-stone-400 font-sans">Acqua (<span id="breakdown-pref-hydro">45</span>%)</div>
+                  <div class="font-bold text-blue-300 text-base" id="breakdown-pref-water">140 g</div>
+                </div>
+                <div class="bg-stone-900/80 p-2 rounded-lg border border-stone-700/60">
+                  <div class="text-[10px] text-stone-400 font-sans">Lievito</div>
+                  <div class="font-bold text-amber-400 text-base" id="breakdown-pref-yeast">3.1 g</div>
+                </div>
+              </div>
+              <p class="text-[11px] text-stone-300 leading-relaxed italic pt-1" id="breakdown-pref-note"></p>
+            </div>
+
+            <!-- Fase 2: Chiusura / Rinfresco -->
+            <div class="bg-stone-800/90 p-3.5 rounded-xl border border-stone-700/80 space-y-2 text-xs">
+              <div class="font-bold text-stone-200 flex items-center gap-1.5">
+                <i data-lucide="bowl" class="w-3.5 h-3.5 text-green-400"></i>
+                <span>2. Il Giorno dell'Infornata (Chiusura Impasto)</span>
+              </div>
+              <div class="grid grid-cols-4 gap-1.5 text-center pt-1 font-mono text-[11px]">
+                <div class="bg-stone-900/80 p-1.5 rounded-lg border border-stone-700/60">
+                  <div class="text-[9px] text-stone-400 font-sans">Farina Rest.</div>
+                  <div class="font-bold text-white" id="breakdown-ref-flour">309 g</div>
+                </div>
+                <div class="bg-stone-900/80 p-1.5 rounded-lg border border-stone-700/60">
+                  <div class="text-[9px] text-stone-400 font-sans">Acqua Rest.</div>
+                  <div class="font-bold text-blue-300" id="breakdown-ref-water">262 g</div>
+                </div>
+                <div class="bg-stone-900/80 p-1.5 rounded-lg border border-stone-700/60">
+                  <div class="text-[9px] text-stone-400 font-sans">Sale</div>
+                  <div class="font-bold text-stone-200" id="breakdown-ref-salt">17 g</div>
+                </div>
+                <div class="bg-stone-900/80 p-1.5 rounded-lg border border-stone-700/60">
+                  <div class="text-[9px] text-stone-400 font-sans">Olio/Grassi</div>
+                  <div class="font-bold text-yellow-300" id="breakdown-ref-oil">0 g</div>
+                </div>
+              </div>
+              <p class="text-[11px] text-stone-300 leading-relaxed italic pt-1" id="breakdown-ref-note"></p>
+            </div>
+          </div>
+
+          <!-- Card Consulente del Forno (Oven Advisor) -->
+          <div id="oven-advisor-card" class="rounded-2xl p-5 shadow-sm border transition-all space-y-3.5 bg-white border-stone-200">
+            <!-- Header con Icona Forno e Badge Compatibilità -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div id="oven-advisor-icon-box" class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <i data-lucide="flame" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-stone-900 text-sm" id="oven-advisor-name">Forno di Casa Classico</h4>
+                  <div class="text-[11px] text-stone-500" id="oven-advisor-temp">Max 250°C • Statico o Ventilato</div>
+                </div>
+              </div>
+              <span id="oven-advisor-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                Verifica
+              </span>
+            </div>
+
+            <!-- Avviso Incompatibilità / Messaggio Educativo -->
+            <div id="oven-warning-box" class="hidden p-3.5 rounded-xl border space-y-2">
+              <div class="flex items-start gap-2">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <h5 class="font-bold text-xs" id="oven-warning-title">Attenzione alla temperatura</h5>
+                  <p class="text-[11px] leading-relaxed mt-0.5" id="oven-warning-msg"></p>
+                </div>
+              </div>
+
+              <!-- Suggerimento Alternativa (es. passa a Teglia Romana) -->
+              <div id="oven-suggestion-box" class="hidden pt-2 border-t border-amber-200/60">
+                <div class="text-[11px] font-medium text-amber-950 mb-1.5" id="oven-suggestion-text"></div>
+                <button type="button" id="btn-switch-suggested-recipe" onclick="applySuggestedRecipe()" class="w-full py-2 px-3 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer">
+                  <i data-lucide="arrow-right-circle" class="w-3.5 h-3.5"></i>
+                  <span id="btn-switch-suggested-label">Passa alla Teglia Romana</span>
+                </button>
+              </div>
+
+              <!-- Bottone Adatta per forno di casa (+2.5% olio, +1% malto) -->
+              <div id="oven-adapt-box" class="hidden pt-1">
+                <button type="button" onclick="adaptRecipeForHomeOven()" class="w-full py-1.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg text-[11px] font-bold border border-stone-300 flex items-center justify-center gap-1.5 transition cursor-pointer">
+                  <i data-lucide="wand-2" class="w-3.5 h-3.5 text-amber-600"></i>
+                  <span>Adatta ricetta per Forno di Casa (+2.5% Olio, +1% Malto)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Box Consigli Pratici di Cottura (Se compatibile o trucchi) -->
+            <div id="oven-tips-box" class="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs space-y-1.5">
+              <div class="font-bold text-stone-800 flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span>Consiglio del Maestro</span>
+              </div>
+              <p class="text-stone-600 text-[11px] leading-relaxed" id="oven-tips-text">
+                Preriscalda al massimo prima di infornare.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card Farina Consigliata -->
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-stone-200/80 space-y-3">
+            <div class="flex items-center gap-2 text-stone-800 font-bold text-sm">
+              <i data-lucide="check-circle" class="w-4 h-4 text-amber-600"></i>
+              <span>Farina Consigliata per questa ricetta</span>
+            </div>
+            <div class="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200/80 text-xs space-y-1.5 text-stone-700">
+              <div class="font-bold text-amber-900" id="flour-rec-type">Tipo 0 o 00 specifica per pizza</div>
+              <div class="flex gap-3 text-stone-600 font-medium">
+                <span>Forza: <strong id="flour-rec-w" class="text-stone-800">W 280-320</strong></span>
+                <span>Proteine: <strong id="flour-rec-prot" class="text-stone-800">12 - 13%</strong></span>
+              </div>
+              <p class="text-stone-500 italic mt-1 text-[11px]" id="flour-rec-notes">
+                Cerca sulle tabelle nutrizionali della confezione: proteine ≥ 12g.
+              </p>
+            </div>
+          </div>
+
+          <!-- CARD PRO MODE: REGOLA DEL 55 (TEMPERATURA ACQUA) -->
+          <div id="pro-water-temp-card" class="hidden bg-white rounded-2xl p-5 shadow-sm border border-blue-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+                  55°
+                </div>
+                <div>
+                  <h4 class="font-bold text-stone-900 text-sm">Regola dei 55 (Temp. Acqua)</h4>
+                  <div class="text-[11px] text-stone-500">Per chiudere l'impasto a 23-24°C perfetti</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Pro Mode</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="text-[11px] text-stone-600 block mb-1">Tipo Impastatrice</label>
+                <select id="pro-kneading-type" onchange="updateWaterTempCalc()" class="w-full p-2 bg-stone-50 border border-stone-300 rounded-lg text-xs font-semibold">
+                  <option value="hand">A mano (+2°C attrito)</option>
+                  <option value="planetary">Planetaria (+6°C attrito)</option>
+                  <option value="spiral">Spirale (+9°C attrito)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[11px] text-stone-600 block mb-1">Temp. Farina (°C)</label>
+                <input type="number" id="pro-flour-temp" value="20" onchange="updateWaterTempCalc()" class="w-full p-2 bg-stone-50 border border-stone-300 rounded-lg text-xs font-semibold">
+              </div>
+            </div>
+
+            <div class="bg-blue-50/80 p-3 rounded-xl border border-blue-200 text-xs flex items-center justify-between">
+              <div>
+                <div class="text-stone-600 text-[11px]">Temperatura Acqua Calcolata:</div>
+                <div class="text-xl font-black text-blue-700 font-mono" id="pro-water-temp-res">14°C</div>
+              </div>
+              <i data-lucide="thermometer" class="w-6 h-6 text-blue-500"></i>
+            </div>
+            <p class="text-[11px] text-stone-600 leading-relaxed italic" id="pro-water-temp-advice">
+              Usa acqua fresca per compensare l'attrito meccanico.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- TAB 2: SCUOLA PASSO-PASSO CON TIMER                           -->
+    <!-- ============================================================= -->
+    <section id="tab-academy" class="tab-content hidden space-y-6">
+      
+      <!-- Intestazione Ricetta Attiva -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">Percorso di Panificazione Guidata</span>
+          <h2 class="text-2xl font-bold font-serif-display text-stone-900" id="academy-recipe-title">Pizza Napoletana Verace</h2>
+          <p class="text-sm text-stone-500 mt-0.5" id="academy-recipe-tagline">Cornicione alveolato, morbida, profumata e digeribile</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="academy-recipe-changer" onchange="loadAcademyRecipe(this.value)" class="bg-stone-50 border border-stone-300 text-stone-800 text-sm font-semibold rounded-xl p-2.5">
+            <!-- Popolato dinamicamente -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Timeline degli Step -->
+      <div id="academy-steps-container" class="space-y-4">
+        <!-- Renderizzato dinamicamente da app.js -->
+      </div>
+
+      <!-- GUIDA VISIVA ALLE PIEGHE (SLAP & FOLD, COIL FOLD, PIRLATURA) -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-stone-100 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+              <i data-lucide="hand" class="w-5 h-5 text-amber-700"></i>
+            </div>
+            <div>
+              <h3 class="font-serif-display text-lg font-bold text-stone-900">Guida Visiva alle Tecniche di Manipolazione</h3>
+              <p class="text-xs text-stone-500">I 3 gesti fondamentali per sviluppare e chiudere il glutine come un professionista</p>
+            </div>
+          </div>
+          <button type="button" onclick="testTimerSound()" class="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-semibold border border-stone-300 transition flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-600"></i>
+            <span>🔔 Prova Suono Timer</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          
+          <!-- Card 1: Slap and Fold -->
+          <div class="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-900 text-sm">1. Slap & Fold</span>
+              <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Impasti molli</span>
+            </div>
+            <p class="text-stone-600 text-[11px] leading-relaxed">
+              La tecnica regina per incorporare aria e formare la maglia glutinica negli impasti umidi senza aggiungere farina asciutta.
+            </p>
+            <div class="bg-white p-3 rounded-xl border border-stone-200 space-y-2">
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-amber-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">A</span>
+                <span class="text-[11px] text-stone-700">Mani umide ai lati: infila le dita sotto la massa sollevandola dal banco.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-amber-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">B</span>
+                <span class="text-[11px] text-stone-700">Sbatti energicamente la parte inferiore dell'impasto sul piano.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-amber-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">C</span>
+                <span class="text-[11px] text-stone-700">Stira la parte superiore in avanti e ripiegala sopra a coprire la base. Ruota di 90° e ripeti.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Coil Fold -->
+          <div class="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-900 text-sm">2. Coil Fold (A spirale)</span>
+              <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">Idro >75%</span>
+            </div>
+            <p class="text-stone-600 text-[11px] leading-relaxed">
+              Ideale per pizza in teglia e focaccia: rinforza la struttura direttamente nella vaschetta senza rompere le bolle d'aria.
+            </p>
+            <div class="bg-white p-3 rounded-xl border border-stone-200 space-y-2">
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">A</span>
+                <span class="text-[11px] text-stone-700">Inumidisci le mani e infilale sotto il centro dell'impasto nella vaschetta.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">B</span>
+                <span class="text-[11px] text-stone-700">Solleva la massa delicatamente verso l'alto finché i bordi penzolano liberi.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">C</span>
+                <span class="text-[11px] text-stone-700">Lascia che i bordi si ripieghino verso il basso e sotto se stessi adagiandosi.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Pirlatura a Coppa -->
+          <div class="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-900 text-sm">3. Pirlatura a Coppa</span>
+              <span class="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full">Staglio</span>
+            </div>
+            <p class="text-stone-600 text-[11px] leading-relaxed">
+              Crea la tensione superficiale necessaria a far crescere la pallina verso l'alto senza allargarsi a frittella.
+            </p>
+            <div class="bg-white p-3 rounded-xl border border-stone-200 space-y-2">
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-green-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">A</span>
+                <span class="text-[11px] text-stone-700">Taglia la porzione (260g) e posizionala sul banco pulito senza farina.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-green-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">B</span>
+                <span class="text-[11px] text-stone-700">Metti le mani a coppa dietro la pallina e trascinala verso di te sul piano.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-green-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0">C</span>
+                <span class="text-[11px] text-stone-700">L'attrito col banco tenderà la pelle esterna formando una sfera tesa e perfetta.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- TAB 3: PRONTO SOCCORSO IMPASTI (TROUBLESHOOTING)              -->
+    <!-- ============================================================= -->
+    <section id="tab-troubleshooter" class="tab-content hidden space-y-6">
+      
+      <!-- ========================================================= -->
+      <!-- WIDGET AGENTE AI: IL MAESTRO RISPONDE (100% GRATUITO)     -->
+      <!-- ========================================================= -->
+      <div class="bg-gradient-to-b from-stone-900 to-stone-950 text-white rounded-3xl p-5 sm:p-7 shadow-xl border border-stone-800 space-y-4">
+        
+        <!-- Header Agente con Avatar e Status Badge -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-600/30 flex-shrink-0">
+              <i data-lucide="bot" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-serif-display text-lg sm:text-xl font-bold text-amber-200">Il Maestro Risponde</h3>
+                <span id="agent-status-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-200 flex items-center gap-1">
+                  Motore Locale Gratuito (Attivo)
+                </span>
+              </div>
+              <p class="text-xs text-stone-400">Assistente AI di Pronto Soccorso • Risolve al volo i disastri d'impasto</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="MaestroAgent.openKeyModal()" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-xl text-xs font-semibold border border-stone-700 transition flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="key" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Chiave Gemini (Opzionale)</span>
+            </button>
+            <button type="button" onclick="MaestroAgent.clearChat()" title="Svuota chat" class="p-2 bg-stone-800/80 hover:bg-stone-700 text-stone-400 hover:text-white rounded-xl transition">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner Contesto Attivo dell'Impasto -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-stone-800/60 p-2.5 sm:p-3 rounded-xl border border-stone-700/60 text-xs gap-2">
+          <div class="flex items-center gap-2 text-stone-300">
+            <i data-lucide="info" class="w-4 h-4 text-amber-400 flex-shrink-0"></i>
+            <span>Contesto attivo: <strong id="agent-current-context-text" class="text-amber-300 font-medium">Pizza Napoletana • 65% Idro</strong></span>
+          </div>
+          <label class="flex items-center gap-2 text-stone-400 cursor-pointer select-none text-[11px]">
+            <input type="checkbox" id="agent-include-context-checkbox" checked class="rounded border-stone-600 text-amber-600 focus:ring-0">
+            <span>Includi dati impasto nella diagnosi</span>
+          </label>
+        </div>
+
+        <!-- Finestra Messaggi Chat -->
+        <div id="agent-chat-messages" class="bg-stone-950/80 border border-stone-800 rounded-2xl p-4 h-72 overflow-y-auto space-y-2">
+          <!-- Popolato dinamicamente da agent.js -->
+        </div>
+
+        <!-- Pillole di Emergenza Rapida (Quick Prompt Chips) -->
+        <div class="space-y-1.5">
+          <div class="text-[11px] font-semibold text-stone-400 flex items-center gap-1.5">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Emergenze frequenti (clicca per chiedere):</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="MaestroAgent.sendQuickPrompt('L\'impasto è appiccicoso come colla e non si stacca dalle mani!')" class="text-[11px] bg-stone-800 hover:bg-stone-700 text-stone-200 px-3 py-1.5 rounded-lg border border-stone-700/80 transition cursor-pointer">
+              ✋ È appiccicoso come colla
+            </button>
+            <button type="button" onclick="MaestroAgent.sendQuickPrompt('Si ritira come un elastico mentre cerco di stenderlo!')" class="text-[11px] bg-stone-800 hover:bg-stone-700 text-stone-200 px-3 py-1.5 rounded-lg border border-stone-700/80 transition cursor-pointer">
+              🪢 Si ritira come un elastico
+            </button>
+            <button type="button" onclick="MaestroAgent.sendQuickPrompt('I panetti sono diventati piatti, sgonfi e pieni di bolle giganti!')" class="text-[11px] bg-stone-800 hover:bg-stone-700 text-stone-200 px-3 py-1.5 rounded-lg border border-stone-700/80 transition cursor-pointer">
+              🥞 Panetti sgonfi / sovralievitati
+            </button>
+            <button type="button" onclick="MaestroAgent.sendQuickPrompt('Nel forno di casa la pizza rimane bianca e cruda sotto!')" class="text-[11px] bg-stone-800 hover:bg-stone-700 text-stone-200 px-3 py-1.5 rounded-lg border border-stone-700/80 transition cursor-pointer">
+              🍕 Sotto resta bianca a 250°C
+            </button>
+          </div>
+        </div>
+
+        <!-- Input Box Chat -->
+        <form onsubmit="MaestroAgent.handleUserSubmit(event)" class="flex gap-2 pt-1">
+          <input type="text" id="agent-chat-input" placeholder="Descrivi il problema (es. 'ho messo troppa acqua', 'l'impasto si strappa')..." class="flex-1 bg-stone-950 border border-stone-700/90 text-white placeholder-stone-500 rounded-xl px-4 py-3 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white px-5 py-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-amber-900/30 cursor-pointer">
+            <span>Invia</span>
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          </button>
+        </form>
+
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 space-y-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+            <i data-lucide="life-buoy" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-stone-900 font-serif-display">Pronto Soccorso dell'Impasto (Archivio Diagnosi)</h2>
+            <p class="text-xs text-stone-500">Qualcosa è andato storto? Trova qui la diagnosi scientifica e la soluzione immediata.</p>
+          </div>
+        </div>
+
+        <!-- Barra di ricerca rapida -->
+        <div class="pt-2">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5"></i>
+            <input type="text" id="troubleshooter-search" oninput="filterTroubleshooter(this.value)" placeholder="Cerca problema (es. 'appiccicoso', 'non lievita', 'elastico', 'crosta pallida')..." class="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- Elenco Problemi e Soluzioni -->
+      <div id="troubleshooter-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Generato dinamicamente -->
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- TAB 4: TEORIA DEL MAESTRO & GLOSSARIO SCIENTIFICO             -->
+    <!-- ============================================================= -->
+    <section id="tab-theory" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200">
+        <h2 class="text-2xl font-bold font-serif-display text-stone-900 mb-2">Il Bignami Scientifico dell'Impasto (Teoria del Maestro)</h2>
+        <p class="text-sm text-stone-600 leading-relaxed max-w-3xl">
+          Non serve una laurea in chimica agraria. In panificazione, pochi concetti chiave governano la riuscita dell'impasto. Ecco i 4 pilastri spiegati senza fronzoli dal Maestro.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Card 1: La Forza della Farina (W) -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 space-y-3">
+          <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">1</div>
+          <h3 class="text-lg font-bold text-stone-900">La Forza della Farina (W) e il Trucco delle Proteine</h3>
+          <p class="text-xs text-stone-600 leading-relaxed">
+            Il valore <strong>W</strong> misura la capacità della farina di trattenere gas e assorbire acqua. Poiché il W non è quasi mai scritto sulle farine da supermercato, si usa la regola aurea delle <strong>proteine</strong>:
+          </p>
+          <div class="bg-stone-50 rounded-xl p-3 text-xs space-y-2 border border-stone-200">
+            <div class="flex justify-between border-b border-stone-200 pb-1">
+              <span class="font-medium text-stone-700">Farina Debole (W 150-180, proteine 9-10.5%)</span>
+              <span class="font-bold text-stone-900">Biscotti, crostate</span>
+            </div>
+            <div class="flex justify-between border-b border-stone-200 pb-1">
+              <span class="font-medium text-stone-700">Farina Media (W 200-260, proteine 11-12%)</span>
+              <span class="font-bold text-stone-900">Focacce veloci, pane diretto</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-stone-700">Farina Forte (W 280-360, proteine 12.5-14.5%)</span>
+              <span class="font-bold text-amber-700">Pizza Napoletana, Teglia, Panettoni</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Maturazione vs Lievitazione -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 space-y-3">
+          <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold">2</div>
+          <h3 class="text-lg font-bold text-stone-900">Maturazione ≠ Lievitazione: Perché si usa il frigo</h3>
+          <p class="text-xs text-stone-600 leading-relaxed">
+            Due processi paralleli ma distinti:
+          </p>
+          <ul class="text-xs text-stone-600 space-y-2 list-disc list-inside">
+            <li><strong>Lievitazione:</strong> I lieviti mangiano zuccheri e producono gas ($CO_2$) gonfiando l'impasto.</li>
+            <li><strong>Maturazione:</strong> Gli enzimi (proteasi e amilasi) scompongono le proteine complesse e gli amidi in zuccheri semplici e aminoacidi digeribili.</li>
+          </ul>
+          <p class="text-xs bg-amber-50 p-2.5 rounded-lg border border-amber-200/60 text-amber-900">
+            <strong>Il trucco del frigo (4°C):</strong> Il freddo addormenta i lieviti impedendo che l'impasto scoppi prima del tempo, ma lascia lavorare gli enzimi. Risultato: impasti digeribilissimi che non fanno sete di notte!
+          </p>
+        </div>
+
+        <!-- Card 3: L'Incordatura e la Prova del Velo -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 space-y-3">
+          <div class="w-9 h-9 rounded-lg bg-green-100 text-green-800 flex items-center justify-center font-bold">3</div>
+          <h3 class="text-lg font-bold text-stone-900">L'Incordatura e il Test del Velo</h3>
+          <p class="text-xs text-stone-600 leading-relaxed">
+            Quando impasti, le due proteine <em>Gliadina</em> (che dà estensibilità) e <em>Glutenina</em> (che dà tenacia) si uniscono con l'acqua formando il <strong>Glutine</strong>, una rete elastica come un palloncino.
+          </p>
+          <div class="bg-stone-50 p-3 rounded-xl border border-stone-200 text-xs text-stone-700">
+            <span class="font-bold text-stone-900">Come capire se hai finito di impastare:</span> Stacca un pezzettino d'impasto con le mani unte e allargalo delicatamente tra le dita. Se riesci a tirarlo fino a renderlo quasi trasparente (un "velo") senza che si strappi, l'incordatura è perfetta!
+          </div>
+        </div>
+
+        <!-- Card 4: I Trucchi per il Forno di Casa -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 space-y-3">
+          <div class="w-9 h-9 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center font-bold">4</div>
+          <h3 class="text-lg font-bold text-stone-900">Hacks per il Forno Domestico (250°C vs 450°C)</h3>
+          <p class="text-xs text-stone-600 leading-relaxed">
+            Il vero forno da pizza cuoce a 450°C in 60 secondi. Se usi un comune forno domestico a 250°C, applica queste 3 regole:
+          </p>
+          <ol class="text-xs text-stone-600 space-y-1.5 list-decimal list-inside">
+            <li><strong>Pietra refrattaria o leccarda rovesciata:</strong> Preriscaldala per 45 minuti sul ripiano più alto, vicino al grill.</li>
+            <li><strong>2% di grassi (olio EVO):</strong> Trattiene l'umidità interna e dona friabilità anziché gommosità.</li>
+            <li><strong>Cottura in 2 tempi:</strong> Prima 3 minuti solo con pomodoro sotto il grill al massimo, poi estrai, metti la mozzarella e rimetti dentro per 1 minuto.</li>
+          </ol>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- TAB 5: DIARIO DEGLI IMPASTI                                   -->
+    <!-- ============================================================= -->
+    <section id="tab-journal" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl font-bold font-serif-display text-stone-900">Il Tuo Diario degli Impasti</h2>
+          <p class="text-xs text-stone-500">Tieni traccia delle tue infornate, idratazioni usate e note di miglioramento.</p>
+        </div>
+        <button onclick="openNewJournalModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md transition">
+          <i data-lucide="plus" class="w-4 h-4"></i> Nuova Nota
+        </button>
+      </div>
+
+      <div id="journal-entries-container" class="space-y-3">
+        <!-- Renderizzato da storage.js / app.js -->
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal Timer Popup (In basso a destra o centrale quando scade) -->
+  <div id="timer-modal" class="fixed inset-0 bg-stone-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 border border-stone-200">
+      <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto animate-bounce">
+        <i data-lucide="bell-ring" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <h4 class="font-serif-display text-xl font-bold text-stone-900" id="timer-modal-title">Tempo Scaduto!</h4>
+        <p class="text-xs text-stone-500 mt-1" id="timer-modal-desc">È ora di procedere con la fase successiva dell'impasto.</p>
+      </div>
+      <div class="text-4xl font-extrabold text-amber-600 font-mono" id="timer-modal-countdown">00:00</div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="stopActiveTimer()" class="flex-1 py-3 bg-stone-800 hover:bg-stone-900 text-white font-bold rounded-xl text-xs transition">
+          Ferma Suoneria
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Aggiungi al Diario -->
+  <div id="journal-modal" class="fixed inset-0 bg-stone-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-stone-200">
+      <div class="flex justify-between items-center border-b border-stone-200 pb-3">
+        <h4 class="font-bold text-stone-900">Salva Impasto nel Diario</h4>
+        <button onclick="closeJournalModal()" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Nome Ricetta / Titolo</label>
+          <input type="text" id="modal-journal-title" class="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-stone-900 font-semibold">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Idratazione Usata (%)</label>
+            <input type="number" id="modal-journal-hydro" class="w-full p-2 bg-stone-50 border border-stone-300 rounded-lg">
+          </div>
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Valutazione (1-5 stelle)</label>
+            <select id="modal-journal-rating" class="w-full p-2 bg-stone-50 border border-stone-300 rounded-lg">
+              <option value="5">⭐⭐⭐⭐⭐ 5 Stelle</option>
+              <option value="4">⭐⭐⭐⭐ 4 Stelle</option>
+              <option value="3">⭐⭐⭐ 3 Stelle</option>
+              <option value="2">⭐⭐ 2 Stelle</option>
+              <option value="1">⭐ 1 Stella</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Note, impressioni, ore di maturazione</label>
+          <textarea id="modal-journal-notes" rows="3" placeholder="Es. Cornicione alto, ottima cottura, la prossima volta 1 ora in più di appretto..." class="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeJournalModal()" class="px-4 py-2 text-stone-600 font-semibold hover:bg-stone-100 rounded-xl transition">Annulla</button>
+        <button onclick="saveJournalEntryConfirm()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition shadow">Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Configurazione Chiave Gemini Gratuita -->
+  <div id="gemini-key-modal" class="fixed inset-0 bg-stone-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-stone-200">
+      <div class="flex justify-between items-center border-b border-stone-200 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="key" class="w-5 h-5 text-amber-600"></i>
+          <h4 class="font-bold text-stone-900">Chiave Gemini AI Gratuita</h4>
+        </div>
+        <button onclick="MaestroAgent.closeKeyModal()" class="text-stone-400 hover:text-stone-600 cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="text-xs text-stone-600 space-y-2.5">
+        <p>
+          Puoi collegare gratuitamente la tua chiave di <strong>Google AI Studio</strong> per abilitare il modello generativo <em>Gemini 2.0 Flash</em>:
+        </p>
+        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900 space-y-1">
+          <div class="font-bold flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5 text-green-600"></i> 100% Gratuito (Free Tier)</div>
+          <div>Fino a 1.500 richieste al giorno a costo zero senza carta di credito.</div>
+        </div>
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Incolla qui la tua API Key di Google AI Studio:</label>
+          <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg font-mono text-xs">
+          <p class="text-[11px] text-stone-400 mt-1">La chiave viene salvata solo nel tuo browser sul tuo PC (mai inviata a terzi).</p>
+        </div>
+        <p class="text-[11px]">
+          Non hai ancora una chiave? Creane una gratis in 30 secondi su:
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-amber-700 font-bold underline">aistudio.google.com</a>.
+        </p>
+        <p class="text-[11px] text-stone-500 italic">
+          *Nota: Se lasci il campo vuoto, l'app continuerà a usare il motore locale gratuito integrato senza bisogno di internet.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-stone-100">
+        <button onclick="MaestroAgent.closeKeyModal()" class="px-4 py-2 text-stone-600 font-semibold hover:bg-stone-100 rounded-xl transition text-xs cursor-pointer">Annulla</button>
+        <button onclick="MaestroAgent.saveKeyConfirm()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition shadow text-xs cursor-pointer">Salva Impostazioni</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Widget Mobile / Desktop Flottante Timer con Stop -->
+  <div id="floating-timer-bar" class="hidden fixed bottom-16 md:bottom-6 right-4 z-40 bg-stone-900/95 border border-amber-500/70 shadow-2xl rounded-2xl p-3 text-white items-center gap-3 backdrop-blur-md animate-bounce-short">
+    <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center flex-shrink-0">
+      <i data-lucide="timer" class="w-5 h-5 text-amber-400 animate-spin"></i>
+    </div>
+    <div>
+      <div class="text-[10px] text-stone-400 uppercase font-bold tracking-wider" id="floating-timer-title">Timer In Corso</div>
+      <div class="text-lg font-black text-amber-300 font-mono tracking-wider" id="floating-timer-display">00:00</div>
+    </div>
+    <button onclick="stopActiveTimer()" class="ml-2 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition cursor-pointer">
+      <i data-lucide="square" class="w-3.5 h-3.5 fill-current"></i>
+      <span>Ferma Timer</span>
+    </button>
+  </div>
+
+  <!-- Scheda da Banco Stampabile A4 (Visualizzata solo in fase di Stampa) -->
+  <div id="print-sheet" class="hidden p-8 font-sans max-w-2xl mx-auto space-y-6">
+    <!-- Popolato dinamicamente da printRecipeCard() -->
+  </div>
+
+  <!-- Toast Notifica Floating -->
+  <div id="toast-notification" class="fixed top-20 right-4 z-50 hidden bg-stone-900 text-white border border-amber-500/80 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold items-center gap-2 transition-all">
+    <i data-lucide="check-circle" class="w-4 h-4 text-green-400"></i>
+    <span id="toast-message">Copiato negli appunti!</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-stone-900 border-t border-stone-800 text-stone-400 py-6 text-xs text-center">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <p>Maestro degli Impasti • Sviluppato secondo la Teoria del Maestro</p>
+      <div class="flex items-center gap-4 text-stone-500">
+        <span>Farina = 100% (Baker's Math)</span>
+        <span>•</span>
+        <a href="privacy.html" class="text-amber-500 hover:text-amber-400 hover:underline transition">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Caricamento Script Applicazione -->
+  <script src="data/recipes.js"></script>
+  <script src="js/calculator.js"></script>
+  <script src="js/troubleshooter.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/agent.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
