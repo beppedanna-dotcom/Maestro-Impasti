@@ -1251,13 +1251,3260 @@
     </div>
   </footer>
 
-  <!-- Caricamento Script Applicazione -->
-  <script src="data/recipes.js"></script>
-  <script src="js/calculator.js"></script>
-  <script src="js/troubleshooter.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/agent.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Bundle Script Applicazione (Self-Contained per PWA & Vercel) -->
+  <script>
+// ==========================================
+// FILE: recipes.js
+// ==========================================
+/**
+ * Maestro degli Impasti - Database Ricette e Percorsi Didattici
+ * Principi di Panificazione Scientifica (Baker's Math)
+ */
 
+const RECIPES_DATA = [
+  {
+    id: "pizza_classica",
+    name: "Pizza Classica",
+    category: "pizza",
+    badge: "Tradizionale & Facile",
+    tagline: "Stesura facilissima, fondo croccante e friabile, ideale per tutti i forni",
+    difficulty: "Principiante",
+    defaultDoughWeight: 240,
+    defaultPieces: 4,
+    defaultHydration: 60,
+    defaultSalt: 2.5,
+    defaultOil: 3.0,
+    defaultTotalHours: 8,
+    defaultRoomTemp: 21,
+    defaultFridgeHours: 0,
+    flourRecommendation: {
+      type: "Farina Tipo 0 o 00 comune",
+      w: "220 - 260 W",
+      protein: "10.5 - 11.5% proteine",
+      notes: "Puoi usare tranquillamente la normale farina da supermercato senza cercare farine forti."
+    },
+    bakersExplanation: "Con il 60% di idratazione e l'olio d'oliva, l'impasto non appiccica, si stende senza ritirarsi e cuoce croccante anche nel forno di casa.",
+    steps: [
+      {
+        step: 1,
+        title: "Impasto Diretto Rapido",
+        durationMinutes: 15,
+        hasTimer: false,
+        instruction: "Sciogli il lievito nell'acqua a temperatura ambiente. Aggiungi la farina e inizia a impastare. Quando la farina è quasi tutta assorbita, aggiungi il sale e l'olio a filo. Lavora finché il panetto è liscio e compatto (circa 8-10 minuti).",
+        whyItWorks: "Con il 60% di idratazione il glutine si forma facilmente senza bisogno di autolisi o tecniche complesse."
+      },
+      {
+        step: 2,
+        title: "Riposo e Puntata",
+        durationMinutes: 120,
+        hasTimer: true,
+        instruction: "Poni la massa in una ciotola leggermente unta d'olio, copri con pellicola o coperchio e lascia lievitare per circa 2 ore a temperatura ambiente finché non raddoppia di volume.",
+        whyItWorks: "Il lievito sviluppa volume e rende la maglia elastica e morbida."
+      },
+      {
+        step: 3,
+        title: "Staglio e Formatura Panetti",
+        durationMinutes: 10,
+        hasTimer: false,
+        instruction: "Dividi l'impasto in 4 panetti da circa 240g ciascuno. Arrotondali sul banco con le mani a coppa per formare delle palline lisce. Adagiale su un vassoio spolverato di farina e copri ermeticamente.",
+        whyItWorks: "La formatura compatta la maglia; il successivo riposo la rilasserà per una stesura senza resistenza."
+      },
+      {
+        step: 4,
+        title: "Appretto Finale",
+        durationMinutes: 180,
+        hasTimer: true,
+        instruction: "Lascia riposare i panetti coperti per 3-4 ore a temperatura ambiente prima della stesura.",
+        whyItWorks: "Il glutine perde la rigidità e diventa docile: potrai allargare il disco anche a mattarello se desideri una pizza sottile e scrocchiarella."
+      },
+      {
+        step: 5,
+        title: "Stesura e Condimento",
+        durationMinutes: 5,
+        hasTimer: false,
+        instruction: "Stendi con le mani o con il mattarello su piano infarinato fino a uno spessore uniforme di circa 3-4 mm. Condisci con pomodoro, mozzarella ben strizzata e un filo d'olio.",
+        whyItWorks: "La percentuale moderata di acqua permette una stesura sottile senza buchi."
+      },
+      {
+        step: 6,
+        title: "Cottura Croccante",
+        durationMinutes: 7,
+        hasTimer: true,
+        instruction: "Forno al massimo (250°C statico). Inforna per circa 6-8 minuti su teglia rotonda o leccarda ben calda finché il fondo è dorato e la mozzarella fusa.",
+        whyItWorks: "L'olio nell'impasto favorisce la reazione di Maillard anche alle temperature più basse dei forni domestici."
+      }
+    ]
+  },
+  {
+    id: "pizza_napoletana",
+    name: "Pizza Napoletana",
+    category: "pizza",
+    badge: "Classica & Contemporanea",
+    tagline: "Cornicione alveolato, morbida, profumata e digeribile",
+    difficulty: "Intermedio",
+    defaultDoughWeight: 260, // peso singolo panetto in grammi
+    defaultPieces: 4,
+    defaultHydration: 65, // %
+    defaultSalt: 2.8,     // % sulla farina
+    defaultOil: 0,        // % (tradizionale 0, opzionale per forno di casa)
+    defaultTotalHours: 16,
+    defaultRoomTemp: 21,
+    defaultFridgeHours: 8,
+    flourRecommendation: {
+      type: "Tipo 0 o 00 specifica per pizza",
+      w: "280 - 320 W",
+      protein: "12 - 13% proteine",
+      notes: "Una farina con buon glutine permette lievitazioni di 16-24 ore senza collassare."
+    },
+    bakersExplanation: "Nella Napoletana l'idratazione al 65% è il perfetto equilibrio tra morbidezza al morso e facilità di stesura con farina W300.",
+    steps: [
+      {
+        step: 1,
+        title: "Miscelazione e Autolisi (Opzionale ma raccomandata)",
+        durationMinutes: 30,
+        hasTimer: true,
+        instruction: "Sciogli tutta l'acqua con il 70% della farina. Mescola brevemente con una forchetta o spatola finché non ci sono parti asciutte. Copri e lascia riposare 30 minuti.",
+        whyItWorks: "L'autolisi attiva gli enzimi (amilasi e proteasi) che spezzano le catene proteiche e gli amidi. Questo favorisce la formazione spontanea del glutine e rende l'impasto più estensibile senza surriscaldarlo."
+      },
+      {
+        step: 2,
+        title: "Chiusura dell'Impasto e Sale",
+        durationMinutes: 15,
+        hasTimer: false,
+        instruction: "Aggiungi il lievito e la restante farina a pioggia. Impasta finché la farina non è assorbita, poi aggiungi il sale con le ultime gocce d'acqua. Lavora energicamente con movimenti di spinta e ripiegamento finché la superficie non diventa liscia.",
+        whyItWorks: "Il sale rinforza la maglia glutinica e regola la fermentazione. Va messo verso la fine per non disidratare direttamente le cellule del lievito."
+      },
+      {
+        step: 3,
+        title: "Pieghe di Rinforzo & Riposo (Puntata)",
+        durationMinutes: 45,
+        hasTimer: true,
+        instruction: "Fai 2 o 3 serie di pieghe a portafoglio (slap and fold sul banco) a distanza di 15-20 minuti l'una dall'altra. Poi ungi leggermente una ciotola, metti l'impasto a riposare coperto a temperatura ambiente o trasferiscilo in frigo per la maturazione.",
+        whyItWorks: "Le pieghe intrappolano ossigeno e allineano le fibre di glutine (gluteneina e gliadina), dando struttura all'impasto per trattenere l'anidride carbonica dei gas di fermentazione."
+      },
+      {
+        step: 4,
+        title: "Staglio (Formatura dei Panetti)",
+        durationMinutes: 10,
+        hasTimer: false,
+        instruction: "Rovescia l'impasto sul piano. Taglia porzioni da 260g (per pizze tonde da 30-32cm). Pirlata ogni porzione chiudendo la base sul banco ruotandola tra i palmi per formare una sfera liscia e ben tesa.",
+        whyItWorks: "La pirlatura conferisce tensione superficiale alla pallina. Senza tensione, il panetto si allargherebbe piatto anziché gonfiarsi armoniosamente verso l'alto."
+      },
+      {
+        step: 5,
+        title: "Appretto (Seconda Lievitazione)",
+        durationMinutes: 240, // 4 ore standard a temperatura ambiente
+        hasTimer: true,
+        instruction: "Metti i panetti in una cassetta di lievitazione o su un vassoio coperto con coperchio ermetico o pellicola trasparente a temperatura ambiente (circa 20-22°C) per 4-6 ore, finché non sono raddoppiati e soffici al tocco.",
+        whyItWorks: "Durante l'appretto il glutine precedentemente teso si rilassa (rilassamento viscoso) mentre il lievito produce anidride carbonica. Il panetto diventa estendibile senza ritirarsi come un elastico."
+      },
+      {
+        step: 6,
+        title: "Stesura e Condimento",
+        durationMinutes: 5,
+        hasTimer: false,
+        instruction: "Immergi il panetto in abbondante semola rimacinata. Stendi partendo dal centro e spingendo l'aria verso il cornicione con i polpastrelli uniti. Non toccare mai il cornicione per non schiacciare gli alveoli! Condisci con pomodoro San Marzano schiacciato e fiordilatte ben asciugato.",
+        whyItWorks: "La semola evita che la pizza si incolli alla pala e conferisce fragranza senza bruciare come farebbe la farina bianca."
+      },
+      {
+        step: 7,
+        title: "Cottura ad Alta Temperatura",
+        durationMinutes: 5,
+        hasTimer: true,
+        instruction: "Forno a legna o fornetto elettrico dedicato a 450°C: 60-90 secondi. In forno di casa: preriscalda al massimo (250-275°C) con pietra refrattaria o teglia ribaltata sul ripiano più alto per 40 minuti; cuoci per circa 4-5 minuti sotto il grill.",
+        whyItWorks: "La spinta termica istantanea vaporizza l'acqua nell'impasto, gonfiando le bolle d'aria prima che la crosta si indurisca (fenomeno dell'oven spring)."
+      }
+    ]
+  },
+  {
+    id: "pizza_teglia_romana",
+    name: "Pizza in Teglia ad Alta Idratazione",
+    category: "pizza",
+    badge: "Super Croccante & Leggera",
+    tagline: "Fondo croccante 'scrocchiarello', alveolatura ad uovo di piccione, idratazione 75-80%",
+    difficulty: "Avanzato",
+    defaultDoughWeight: 600, // per teglia standard 30x40cm
+    defaultPieces: 1,
+    defaultHydration: 78,
+    defaultSalt: 2.5,
+    defaultOil: 2.5, // olio evo nell'impasto per friabilità
+    defaultTotalHours: 24,
+    defaultRoomTemp: 20,
+    defaultFridgeHours: 20,
+    flourRecommendation: {
+      type: "Farina Forte Tipo 0 / Manitoba",
+      w: "320 - 360 W",
+      protein: "13.5 - 14.5% proteine",
+      notes: "L'alta idratazione (>75%) richiede farine forti capaci di assorbire e trattenere grandi quantità di acqua."
+    },
+    bakersExplanation: "Con il 78% di idratazione, l'olio d'oliva aiuta a emulsionare la maglia glutinica donando friabilità e facilitando la doratura nel forno domestico.",
+    steps: [
+      {
+        step: 1,
+        title: "Impasto Freddo e Inserimento Acqua in 2 Tempi",
+        durationMinutes: 20,
+        hasTimer: false,
+        instruction: "Usa acqua fredda di frigo (4°C). Mescola tutta la farina con il 60% dell'acqua e il lievito. Solo quando l'impasto ha formato una struttura compatta (incordatura), inizia ad aggiungere la restante acqua a filo, pochissimo alla volta, facendola assorbire completamente prima di versarne altra. Inserisci sale e infine l'olio a filo.",
+        whyItWorks: "Aggiungere l'acqua gradualmente (in 'bocche') permette al glutine di svilupparsi prima, altrimenti una grande quantità d'acqua iniziale 'annegherebbe' le proteine impedendo l'incordatura."
+      },
+      {
+        step: 2,
+        title: "Pieghe Coil Fold o a Portafoglio",
+        durationMinutes: 60,
+        hasTimer: true,
+        instruction: "Fai 3 giri di pieghe sul banco leggermente unto o direttamente nella ciotola con le mani umide a intervalli di 20 minuti. L'impasto da molliccio diventerà sodo, lucido e pieno di bolle superficiali.",
+        whyItWorks: "Il coil fold (sollevamento centrale e ripiegamento su se stesso) rinforza l'impasto senza strappare la maglia glutinica fragile ricca di acqua."
+      },
+      {
+        step: 3,
+        title: "Maturazione Lunga in Frigo (24-48 ore)",
+        durationMinutes: 1440, // 24h
+        hasTimer: false,
+        instruction: "Riponi l'impasto in un contenitore oliato con pareti dritte e coperchio, contrassegnando il livello iniziale. Lascia in frigorifero a 4°C per 24 o 48 ore.",
+        whyItWorks: "Al freddo l'azione del lievito è rallentata, mentre gli enzimi continuano a digerire amidi e proteine in composti semplici. Risultato: digeribilità massima, profumi complessi e alveolatura spettacolare."
+      },
+      {
+        step: 4,
+        title: "Formatura e Appretto a Temperatura Ambiente",
+        durationMinutes: 180, // 3 ore
+        hasTimer: true,
+        instruction: "Tira fuori dal frigo, forma il panetto rettangolare senza sgonfiarlo troppo e lascialo a temperatura ambiente per 3-4 ore a completare la lievitazione in una vaschetta unta.",
+        whyItWorks: "L'impasto deve tornare a temperatura ambiente (circa 18-20°C a cuore) prima della stesura, altrimenti il glutine rigido e freddo non si estenderà uniformemente."
+      },
+      {
+        step: 5,
+        title: "Stesura a Polpastrello 'Roman Style'",
+        durationMinutes: 5,
+        hasTimer: false,
+        instruction: "Cospargi il banco con abbondante semola rimacinata. Rovescia delicatamente l'impasto. Con la punta delle dita partendo dal fondo verso l'alto, schiaccia creando delle fossette ritmiche per distribuire l'aria in modo omogeneo senza espellerla. Trasferisci in teglia di ferro blu o alluminio unta con un filo d'olio.",
+        whyItWorks: "La pressione ritmata a dita piatte distribuisce i gas nelle cellule d'aria (alveoli) senza rompere le pareti interne."
+      },
+      {
+        step: 6,
+        title: "Cottura a Doppio Stadio",
+        durationMinutes: 15,
+        hasTimer: true,
+        instruction: "Forno al massimo (250°C statico). Primi 8-10 minuti a contatto con la base del forno (per fare la crosta dorata sotto e dare spinta verticale). Poi trasferisci a metà altezza per altri 6-8 minuti per completare la cottura e asciugare l'umidità interna.",
+        whyItWorks: "Il contatto diretto col fondo del forno trasmette calore per conduzione immediata, facendo 'esplodere' la pizza in altezza prima che evapori l'acqua."
+      }
+    ]
+  },
+  {
+    id: "focaccia_ligure",
+    name: "Focaccia Ligure / Genovese",
+    category: "focaccia",
+    badge: "Morbida Dentro, Croccante Fuori",
+    tagline: "I tipici buchi dorati pieni di salamoia saporita di acqua, olio EVO e sale grosso",
+    difficulty: "Principiante",
+    defaultDoughWeight: 550, // per teglia 30x40cm
+    defaultPieces: 1,
+    defaultHydration: 68,
+    defaultSalt: 2.5,
+    defaultOil: 5.0, // olio evo nell'impasto
+    defaultTotalHours: 5,
+    defaultRoomTemp: 22,
+    defaultFridgeHours: 0,
+    flourRecommendation: {
+      type: "Farina Tipo 0 o 00 di media forza",
+      w: "240 - 270 W",
+      protein: "11.5 - 12.5% proteine",
+      notes: "Una farina di media forza consente una lievitazione rapida in giornata mantenendo morbidezza."
+    },
+    bakersExplanation: "La focaccia genovese richiede generose dosi di olio extravergine d'oliva e una salamoia (emulsione di acqua, olio e sale) che riempie le fossette durante la cottura.",
+    steps: [
+      {
+        step: 1,
+        title: "Impasto Morbido e Idratato",
+        durationMinutes: 15,
+        hasTimer: false,
+        instruction: "Sciogli il lievito nell'acqua tiepida (24°C) con un cucchiaino di malto o miele. Aggiungi la farina e mescola. Unisci il sale e metà dell'olio evo previsto per l'impasto. Lavora finché l'impasto è morbido e setoso.",
+        whyItWorks: "Il malto o lo zucchero fornisce nutrimento immediato al lievito e favorisce la tipica doratura ambrata in cottura."
+      },
+      {
+        step: 2,
+        title: "Prima Lievitazione in Teglia",
+        durationMinutes: 45,
+        hasTimer: true,
+        instruction: "Ungi generosamente la teglia con olio extravergine. Adagia la massa al centro, rovesciala in modo che sia unta su entrambi i lati. Lascia riposare coperta per 30-45 minuti per far rilassare il glutine.",
+        whyItWorks: "Il velo d'olio previene la formazione della pellicina secca e idrata l'esterno dell'impasto."
+      },
+      {
+        step: 3,
+        title: "Prima Stesura Dolce",
+        durationMinutes: 5,
+        hasTimer: false,
+        instruction: "Con i polpastrelli allarga delicatamente l'impasto verso i bordi della teglia senza tirarlo violentemente. Se tende a ritirarsi, fermati, aspetta 10 minuti che il glutine si rilassi e poi finisci di coprire gli angoli.",
+        whyItWorks: "Forzare un impasto quando il glutine è contratto ne causa lo strappo; attendere qualche minuto ne ripristina la plasticità."
+      },
+      {
+        step: 4,
+        title: "Le 'Fossette' Tipiche e la Salamoia Magica",
+        durationMinutes: 60,
+        hasTimer: true,
+        instruction: "Spolvera la superficie con un pizzico di sale fino. Prepara la salamoia: emulsiona 40g di acqua tiepida con 30g di olio EVO e 5g di sale. Affonda decisamente le dita (a mano aperta) nell'impasto toccando il fondo della teglia per creare buchi profondi. Versa subito l'emulsione su tutta la superficie riempiendo i buchi. Lascia lievitare ancora 60-90 minuti.",
+        whyItWorks: "La salamoia nei buchi impedisce che la focaccia si asciughi durante la cottura e crea quel contrasto irresistibile tra croccantezza esterna e cuore morbido."
+      },
+      {
+        step: 5,
+        title: "Cottura a Calore Forte e Vapore",
+        durationMinutes: 15,
+        hasTimer: true,
+        instruction: "Inforna a 230°C statico per circa 15 minuti finché la superficie non è intensamente dorata e l'olio sfrigola nelle fossette. Appena sfornata, spennella ancora con un velo d'olio e servi calda.",
+        whyItWorks: "L'emulsione acquosa sfrigola ad alta temperatura cuocendo l'impasto a vapore nelle cavità e per frittura dorata sui bordi rialzati."
+      }
+    ]
+  },
+  {
+    id: "pane_casereccio",
+    name: "Pane Casereccio a Crosta Spessa",
+    category: "pane",
+    badge: "Mollica Alveolata & Profumo Rustico",
+    tagline: "Pagnotta contadina con farine semi-integrali, crosta scura e friabile",
+    difficulty: "Intermedio",
+    defaultDoughWeight: 850, // pagnotta singola
+    defaultPieces: 1,
+    defaultHydration: 70,
+    defaultSalt: 2.0,
+    defaultOil: 0,
+    defaultTotalHours: 18,
+    defaultRoomTemp: 20,
+    defaultFridgeHours: 12,
+    flourRecommendation: {
+      type: "Mix Tipo 1 / Tipo 2 (70%) + Manitoba o Semola (30%)",
+      w: "260 - 300 W",
+      protein: "12.5 - 13.5% proteine",
+      notes: "Le farine meno raffinate (Tipo 1 o 2) contengono più crusca e germe, conferendo aromi complessi e un colore ambrato."
+    },
+    bakersExplanation: "Il 2% di sale è lo standard aureo per il pane italiano: esalta il sapore del grano senza coprirlo e rafforza la tenuta della cupola durante il taglio e la cottura.",
+    steps: [
+      {
+        step: 1,
+        title: "Autolisi con Farine Rustiche",
+        durationMinutes: 45,
+        hasTimer: true,
+        instruction: "Unisci tutta la farina con il 90% dell'acqua totale. Mescola fino a quando non c'è più farina asciutta. Copri e lascia riposare 45 minuti a temperatura ambiente.",
+        whyItWorks: "La crusca presente nelle farine Tipo 1 e 2 assorbe acqua molto più lentamente rispetto all'amido; l'autolisi prolungata evita che la crusca 'rubi' acqua al glutine durante la lavorazione."
+      },
+      {
+        step: 2,
+        title: "Inserimento Lievito e Pieghe di Rinforzo",
+        durationMinutes: 90,
+        hasTimer: true,
+        instruction: "Aggiungi il lievito (o licoli/lievito madre) e l'acqua restante. Lavora brevemente, unisci il sale e chiudi l'impasto. Esegui 3 serie di pieghe a tre (slap & fold o stretch & fold) ogni 30 minuti.",
+        whyItWorks: "La piega a tre allunga e allinea le catene proteiche creando una tensione tridimensionale capace di sostenere la pagnotta in altezza."
+      },
+      {
+        step: 3,
+        title: "Formatura a Pagnotta (Batard o Boule) e Cestino",
+        durationMinutes: 15,
+        hasTimer: false,
+        instruction: "Rovescia l'impasto, allargalo a rettangolo, piega i lati verso il centro e arrotola stringendo per formare una sfera tesa. Spolvera un cestino da lievitazione (banneton) con farina di riso e semola, adagia la pagnotta con la chiusura rivolta verso l'alto. Sigilla in un sacchetto e metti in frigo per 12-16 ore.",
+        whyItWorks: "La farina di riso non contiene glutine e non assorbe umidità, impedendo che l'impasto si attacchi al cestino anche dopo molte ore in frigo."
+      },
+      {
+        step: 4,
+        title: "Il Taglio (Scoring) a Freddo",
+        durationMinutes: 3,
+        hasTimer: false,
+        instruction: "Rovescia la pagnotta fredda direttamente su carta forno o sulla paletta. Con una lametta da barba inclinata a 45 gradi, pratica un taglio netto e deciso profondo circa 1 cm lungo tutta la lunghezza.",
+        whyItWorks: "Il taglio direziona l'espansione dei gas in un punto controllato, permettendo la formazione della caratteristica 'orecchia' (ear) croccante."
+      },
+      {
+        step: 5,
+        title: "Cottura in Pentola di Ghisa (Dutch Oven)",
+        durationMinutes: 45,
+        hasTimer: true,
+        instruction: "Preriscalda la pentola di ghisa con coperchio a 240°C per 40 minuti. Inserisci la pagnotta, chiudi col coperchio e cuoci per 20 minuti. Togli il coperchio, abbassa a 200°C e prosegui per altri 25 minuti per dorare la crosta.",
+        whyItWorks: "La pentola chiusa intrappola il vapore rilasciato dall'impasto stesso. Il vapore mantiene morbida la crosta nei primi 20 minuti permettendo al pane di gonfiarsi al massimo prima di caramellare."
+      }
+    ]
+  },
+  {
+    id: "focaccia_barese",
+    name: "Focaccia Barese con Patata e Pomodorini",
+    category: "focaccia",
+    badge: "Fondo Frutto e Bordo Rustico",
+    tagline: "Semola rimacinata, patata lessa nell'impasto, pomodorini schiacciati a mano e olive",
+    difficulty: "Principiante",
+    defaultDoughWeight: 650,
+    defaultPieces: 1,
+    defaultHydration: 75,
+    defaultSalt: 2.5,
+    defaultOil: 4.0,
+    defaultTotalHours: 4,
+    defaultRoomTemp: 22,
+    defaultFridgeHours: 0,
+    flourRecommendation: {
+      type: "50% Semola Rimacinata di Grano Duro + 50% Farina 0 + Patata Lessa",
+      w: "220 - 260 W",
+      protein: "12% proteine",
+      notes: "La semola regala sapore rustico e croccantezza alla base, mentre gli amidi della patata mantengono la mollica sofficissima per giorni."
+    },
+    bakersExplanation: "La patata lessa nell'impasto contiene amidi gelatinizzati che trattengono acqua impedendo il raffermamento, tipico segreto delle nonne pugliesi.",
+    steps: [
+      {
+        step: 1,
+        title: "Lesso della Patata e Impasto",
+        durationMinutes: 30,
+        hasTimer: false,
+        instruction: "Lessa una patata media (circa 100g), sbucciala e schiacciala ancora calda. Lasciala intiepidire e uniscila alla farina e semola. Sciogli il lievito nell'acqua, impasta fino a creare un composto morbido ed elastico, unendo infine sale e olio.",
+        whyItWorks: "La patata agisce come miglioratore naturale, aumentando l'estensibilità della semola rimacinata."
+      },
+      {
+        step: 2,
+        title: "Stesura con le Mani in Teglia di Ferro",
+        durationMinutes: 10,
+        hasTimer: false,
+        instruction: "Versa abbondante olio sul fondo di una teglia rotonda (preferibilmente di ferro o alluminio pesante). Poni l'impasto e stendilo con le dita unte facendolo aderire fino ai bordi.",
+        whyItWorks: "L'abbondante olio sul fondo frigge letteralmente la base in cottura, conferendole il caratteristico sapore tostato e croccante."
+      },
+      {
+        step: 3,
+        title: "Condimento 'Scattato' a Mano",
+        durationMinutes: 10,
+        hasTimer: false,
+        instruction: "Prendi i pomodorini ciliegino o fiaschetto e rompili direttamente con le mani sopra l'impasto, lasciando cadere acqua di vegetazione e semi nelle fossette. Aggiungi olive baresi con nocciolo, origano abbondante, sale grosso e un ultimo generoso giro d'olio.",
+        whyItWorks: "L'acqua del pomodoro penetra nelle cavità mantenendo il cuore umido mentre la buccia si caramella sopra."
+      },
+      {
+        step: 4,
+        title: "Cottura Focosa",
+        durationMinutes: 25,
+        hasTimer: true,
+        instruction: "Inforna alla massima temperatura (250°C statico) sul piano più basso per i primi 15 minuti, poi sposta a metà altezza per altri 10 minuti finché i pomodorini sono abbrustoliti e il bordo è croccante.",
+        whyItWorks: "Il calore dal basso è cruciale per dorare e tostare la semola intrisa d'olio sul fondo."
+      }
+    ]
+  }
+];
+
+/**
+ * Database dei Forni e Matrice di Compatibilità / Consigli di Cottura
+ */
+const OVENS_DATA = [
+  {
+    id: "home_standard",
+    name: "Forno di Casa Classico",
+    tagline: "Statico o ventilato standard (max 250°C - 275°C)",
+    icon: "home",
+    maxTemp: "250°C - 275°C",
+    type: "domestico",
+    adviceGeneral: "Il forno di casa cuoce per irraggiamento e convenzione più lenta. È perfetto per teglie, focacce e pane in pentola!",
+    recipesAdvice: {
+      pizza_napoletana: {
+        compatible: false,
+        warningLevel: "high",
+        warningTitle: "Attenzione: La vera Napoletana non può cuocere a 250°C!",
+        warningMessage: "La Pizza Napoletana Verace richiede 430°C - 480°C per sviluppare il cornicione in 60-90 secondi. Nel forno di casa a 250°C l'impasto impiega 5-7 minuti: l'acqua evapora lentamente e la pizza risulterà inevitabilmente biscottata, dura o gommosa.",
+        suggestedRecipeId: "pizza_teglia_romana",
+        suggestedRecipeName: "Pizza in Teglia ad Alta Idratazione (Teglia Romana)",
+        suggestionText: "La Pizza in Teglia Romana è nata apposta per cuocere a 250°C: otterrai una base croccante 'scrocchiarello' e un interno sofficissimo e alveolato!",
+        homeOvenHacks: [
+          "Se vuoi fare comunque pizze tonde: aggiungi il 2.5% di Olio EVO e 1% di miele/malto nell'impasto per non far asciugare la pasta.",
+          "Tecnica Padella + Grill: cuoci la base per 2 minuti in padella rovente sul fornello a gas, poi sposta subito sotto il grill del forno a massima potenza per 2 minuti.",
+          "Preriscalda la leccarda capovolta o la pietra refrattaria per almeno 45 minuti sul ripiano più alto possibile."
+        ]
+      },
+      pizza_teglia_romana: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "Forno Perfetto per la Teglia Romana!",
+        warningMessage: "I 250°C del forno di casa sono ideali per la teglia ad alta idratazione.",
+        tips: "Inforna i primi 8-10 minuti a contatto diretto con il fondo del forno (per fare il fondo croccante), poi sposta a metà altezza per asciugare l'interno."
+      },
+      focaccia_ligure: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "Eccellente per la Focaccia Ligure",
+        warningMessage: "La salamoia di acqua e olio protegge l'impasto durante i 15 minuti di cottura a 230-250°C.",
+        tips: "Usa modalità statica al massimo e versa salamoia abbondante nelle fossette."
+      },
+      focaccia_barese: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "Ideale per la Focaccia Barese",
+        warningMessage: "L'abbondante olio nella teglia di ferro e i pomodorini garantiscono una frittura croccante del fondo anche a 250°C.",
+        tips: "Piano basso del forno per i primi 15 minuti, poi sposta a metà altezza."
+      },
+      pane_casereccio: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "Ottimo con la tecnica della Pentola (Dutch Oven)",
+        warningMessage: "Nel forno di casa a 240°C, la pentola di ghisa con coperchio riproduce il calore e il vapore di un forno professionale da panificio.",
+        tips: "20 minuti a 240°C con coperchio chiuso, poi togli il coperchio e abbassa a 200°C per 20 minuti per dorare la crosta."
+      },
+      pizza_classica: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "La Regina del Forno di Casa!",
+        warningMessage: "La Pizza Classica con il 60% di idro e il 3% di olio è nata appositamente per cuocere croccante e asciutta a 250°C.",
+        tips: "Inforna a 250°C statico o ventilato per circa 6-8 minuti. Ottima anche stesa col mattarello se la ami sottile!"
+      }
+    }
+  },
+  {
+    id: "electric_pizza",
+    name: "Fornetto Elettrico Pizza",
+    tagline: "G3 Ferrari, Spice Caliente, Effeuno P134H (400°C - 500°C)",
+    icon: "zap",
+    maxTemp: "400°C - 500°C",
+    type: "specializzato",
+    adviceGeneral: "Camera di cottura ribassata e resistenze potenti. Ideale per la pizza napoletana e tonde contemporanee in 90-120 secondi.",
+    recipesAdvice: {
+      pizza_napoletana: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "Forno Ideale per la Vera Napoletana!",
+        warningMessage: "Questo fornetto raggiunge le temperature perfette (390-450°C) per l'effetto 'Oven Spring' immediato.",
+        tips: "Preriscalda bene la pietra refrattaria o biscotto per 20-30 min. Se hai un fornetto a conchiglia (es. Ferrari), inforna quando la resistenza superiore è rovente (rossa) e ruota la pizza di 180° a metà cottura (dopo 60-75 secondi)."
+      },
+      pizza_classica: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "Ottima riuscita nel fornetto",
+        warningMessage: "Imposta il fornetto a 350-380°C per una cottura uniforme e croccante in 2-3 minuti.",
+        tips: "Non alzare oltre i 400°C per non bruciare l'olio nell'impasto."
+      },
+      pizza_teglia_romana: {
+        compatible: true,
+        warningLevel: "info",
+        warningTitle: "Adatto per tegliette",
+        warningMessage: "Se usi un fornetto a conchiglia rotondo puoi cuocere solo tegliette tonde; se hai un Effeuno puoi cuocere teglie 30x40cm impostando cielo a 300°C e platea a 250°C.",
+        tips: "Evita di toccare la resistenza superiore con impasti molto gonfi."
+      },
+      focaccia_ligure: {
+        compatible: true,
+        warningLevel: "info",
+        warningTitle: "Attenzione a non bruciare la salamoia",
+        warningMessage: "Regola la temperatura a 260-280°C per evitare che l'olio bruci prima che l'impasto sia cotto all'interno.",
+        tips: "Cottura rapida (8-10 minuti)."
+      },
+      focaccia_barese: {
+        compatible: true,
+        warningLevel: "info",
+        warningTitle: "Ottima riuscita",
+        warningMessage: "I pomodorini e le olive si abbrustoliranno a puntino.",
+        tips: "Tieni d'occhio il cielo per non bruciare i pomodorini prima del fondo."
+      },
+      pane_casereccio: {
+        compatible: false,
+        warningLevel: "medium",
+        warningTitle: "Camera troppo bassa per grandi pagnotte",
+        warningMessage: "I fornetti a conchiglia hanno una camera di cottura bassa: una pagnotta da 800g toccando la resistenza brucerebbe subito.",
+        suggestedRecipeId: "pizza_napoletana",
+        suggestedRecipeName: "Pizza Napoletana Verace",
+        suggestionText: "Sfrutta questo fornetto per dare il massimo sulla Pizza Napoletana o cuoci sfilatini/panini bassi.",
+        tips: "Se hai un Effeuno con camera alta puoi cuocere il pane; altrimenti usa il forno di casa con pentola in ghisa!"
+      }
+    }
+  },
+  {
+    id: "gas_portable",
+    name: "Forno a Gas per Pizza",
+    tagline: "Ooni Koda, Roccbox, Munaciello, Gozney (450°C - 500°C)",
+    icon: "flame",
+    maxTemp: "450°C - 500°C",
+    type: "specializzato",
+    adviceGeneral: "Fiamma viva a gas, pietra refrattaria spessa e calore violento. È la regina della pizza napoletana moderna!",
+    recipesAdvice: {
+      pizza_napoletana: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "Il Regno della Pizza Napoletana!",
+        warningMessage: "Con 450°C sulla pietra e fiamma viva a rotolamento, la tua pizza cuocerà in 60-80 secondi con cornicione a canotto.",
+        tips: "TRUCCO DEL MAESTRO ESSENZIALE: Preriscalda a fiamma massima per 20-25 min (pietra a 420-440°C). Appena inforni la pizza, ABBASSA LA FIAMMA AL MINIMO! Questo permette al fondo di cuocere senza carbonizzare il cornicione vicino alla fiamma. Ruota la pizza di 90° ogni 20 secondi con un palino."
+      },
+      pizza_classica: {
+        compatible: true,
+        warningLevel: "info",
+        warningTitle: "Attenzione alla fiamma",
+        warningMessage: "Contenendo olio, cuoci a fiamma moderata (350°C) per non bruciare il fondo.",
+        tips: "Tieni la fiamma al minimo per una cottura più asciutta e biscottata."
+      },
+      pizza_teglia_romana: {
+        compatible: false,
+        warningLevel: "medium",
+        warningTitle: "Non adatto a teglie grandi ad alta idratazione",
+        warningMessage: "Il calore a gas dall'alto brucerebbe i condimenti prima che l'impasto spesso della teglia si asciughi.",
+        suggestedRecipeId: "pizza_napoletana",
+        suggestedRecipeName: "Pizza Napoletana Verace",
+        suggestionText: "Con questo forno la Pizza Napoletana o la Tonda Romana scrocchiarella sono la scelta regina.",
+        tips: "Per la teglia usa sempre il normale forno di casa a 250°C."
+      },
+      focaccia_ligure: {
+        compatible: false,
+        warningLevel: "medium",
+        warningTitle: "Rischio fiammata con l'olio della salamoia",
+        warningMessage: "L'olio abbondante vicino alla fiamma viva del gas può generare fiammate pericolose.",
+        tips: "Meglio cuocere la focaccia nel forno di casa a 240°C."
+      },
+      focaccia_barese: {
+        compatible: false,
+        warningLevel: "medium",
+        warningTitle: "Meglio il forno tradizionale",
+        warningMessage: "La focaccia barese richiede tempo per cuocere la patata e la semola senza bruciare i pomodori.",
+        tips: "Usa il forno tradizionale sul ripiano inferiore."
+      },
+      pane_casereccio: {
+        compatible: false,
+        warningLevel: "high",
+        warningTitle: "Non adatto a pagnotte",
+        warningMessage: "I forni a gas portatili sono aperti frontalmente e disperdono il vapore necessario per la crosta del pane.",
+        tips: "Usa il forno di casa con pentola in ghisa (Dutch Oven)."
+      }
+    }
+  },
+  {
+    id: "wood_fired",
+    name: "Forno a Legna Tradizionale",
+    tagline: "Volta refrattaria, legna di faggio/quercia (450°C - 500°C)",
+    icon: "trees",
+    maxTemp: "450°C - 500°C",
+    type: "professionale",
+    adviceGeneral: "Il massimo della tradizione. Calore per irraggiamento dalla cupola, conduzione dalla platea e convezione della fiamma viva.",
+    recipesAdvice: {
+      pizza_napoletana: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "La Tradizione Pura della Vera Pizza Napoletana",
+        warningMessage: "Temperatura platea 430°C, fiamma viva sul lato sinistro. Cottura da disciplinare in 60-90 secondi.",
+        tips: "Mantieni la fiamma viva chiara e priva di fumo con legna stagionata (faggio o rovere). Spazza la cenere prima di infornare. Alza la pizza sulla pala verso la volta negli ultimi 5 secondi per una doratura perfetta (il 'bacio del forno')."
+      },
+      pizza_classica: {
+        compatible: true,
+        warningLevel: "info",
+        warningTitle: "Tradizionale",
+        warningMessage: "Cuoci con forno non troppo violento (360-380°C).",
+        tips: "Gira la pizza a metà cottura."
+      },
+      pizza_teglia_romana: {
+        compatible: false,
+        warningLevel: "info",
+        warningTitle: "Possibile solo a calore discendente",
+        warningMessage: "Puoi cuocere teglie solo quando il forno scende a 280°C senza fiamma viva.",
+        tips: "Sposta la brace indietro e usa teglie in ferro pesante."
+      },
+      focaccia_ligure: {
+        compatible: true,
+        warningLevel: "info",
+        warningTitle: "Ottima a forno moderato (250°C - 280°C)",
+        warningMessage: "Cuocere solo a fuoco spento e brace coperta per non bruciare la salamoia.",
+        tips: "Chiudi la bocca del forno se hai uno sportello per trattenere l'umidità."
+      },
+      focaccia_barese: {
+        compatible: true,
+        warningLevel: "info",
+        warningTitle: "Deliziosa a calore dolce",
+        warningMessage: "Il profumo della legna esalta l'origano e i pomodorini.",
+        tips: "Cuoci lontano dalle braci vive."
+      },
+      pane_casereccio: {
+        compatible: true,
+        warningLevel: "none",
+        warningTitle: "La Panificazione Antica a Calore Discendente",
+        warningMessage: "Il pane si inforna a 'forno spento': si toglie la brace, si pulisce il piano e si infornano le pagnotte a 240°C chiudendo lo sportello.",
+        tips: "La massa termica refrattaria rilascerà calore costante per 45-60 minuti creando una crosta spessa e dorata leggendaria."
+      }
+    }
+  }
+];
+
+/**
+ * Database Metodi di Impasto (Diretto, Biga, Poolish)
+ */
+const DOUGH_METHODS = {
+  direct: {
+    id: "direct",
+    name: "Impasto Diretto",
+    tagline: "Il metodo classico in un solo passaggio",
+    badge: "Consigliato ai principianti",
+    difficulty: "Facile",
+    icon: "zap",
+    shortDesc: "Tutti gli ingredienti vengono uniti direttamente nella ciotola. Zero preparazioni il giorno prima, processo lineare, veloce e sicuro.",
+    whatYouGet: "Impasto equilibrato, gustoso e affidabile. È la scelta migliore per iniziare senza impazzire con pre-fermenti e fermentazioni a due stadi.",
+    proTip: "Ideale se hai poco tempo o vuoi impastare la mattina per la sera.",
+    defaultPrefermentPct: 0
+  },
+  biga: {
+    id: "biga",
+    name: "Con Biga (Pre-fermento Solido)",
+    tagline: "Pre-impasto asciutto fermentato 16-24 ore",
+    badge: "Il segreto dei maestri pizzaioli",
+    difficulty: "Esperto",
+    icon: "layers",
+    shortDesc: "Si prepara una miscela grezza e asciutta (farina + 45% acqua + 1% lievito fresco, senza impastare troppo). Si fa maturare a 16-18°C per 16-24 ore e poi si 'chiude' l'impasto aggiungendo la restante acqua, sale e aromi.",
+    whatYouGet: "Cornicione esplosivo 'a canotto' con alveoli giganti, profumo antico e tostato, croccantezza esterna incredibile e grandissima conservabilità.",
+    proTip: "La biga NON va impastata a lungo: la farina deve solo assorbire l'acqua senza formare glutine (deve sembrare uno sfarinato grezzo).",
+    defaultPrefermentPct: 50, // 50% di farina nella biga
+    bigaHydration: 45,        // 45% acqua sulla farina della biga
+    bigaYeastPct: 1.0         // 1% lievito fresco sulla farina della biga
+  },
+  poolish: {
+    id: "poolish",
+    name: "Con Poolish (Pre-fermento Liquido)",
+    tagline: "Pre-impasto liquido ad alta idratazione (100%)",
+    badge: "Scioglievolezza estrema al morso",
+    difficulty: "Intermedio",
+    icon: "droplets",
+    shortDesc: "Si uniscono in parti uguali farina e acqua (100% idro) con pochissimo lievito. Si lascia fermentare finché è pieno di bolle e leggermente cedevole al centro prima del rinfresco finale.",
+    whatYouGet: "Cornicione leggerissimo e soffice come una nuvola, scioglievolezza assoluta (la pizza non 'gomma' mai sotto i denti), sapore dolce e profumi lattici delicati.",
+    proTip: "Il poolish è pronto quando la superficie è colma di bolle e il centro inizia appena a cedere (picco di fermentazione).",
+    defaultPrefermentPct: 30, // 30% farina nel poolish
+    poolishHydration: 100,    // 100% acqua sulla farina del poolish
+    poolishYeastPct: 0.3      // 0.3% lievito fresco
+  }
+};
+
+// Esporta per compatibilità browser e Node
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { RECIPES_DATA, OVENS_DATA, DOUGH_METHODS };
+}
+
+
+
+// ==========================================
+// FILE: calculator.js
+// ==========================================
+/**
+ * Maestro degli Impasti - Motore di Calcolo "Baker's Math" (Percentuali del Panettiere)
+ * Calibrazione scientifica per idratazione, sale, olio e lieviti (fresco, secco, madre, licoli)
+ */
+
+const DoughCalculator = {
+  // Tipi di lievito supportati
+  YEAST_TYPES: {
+    FRESH: "fresh",           // Lievito di birra fresco (cubetto)
+    DRY: "dry",               // Lievito di birra secco istantaneo / attivo
+    SOURDOUGH_SOLID: "solid", // Pasta madre solida (50% idratazione)
+    LICOLI: "licoli"          // Lievito naturale liquido (100% idratazione)
+  },
+
+  /**
+   * Calcola la quantità di lievito di birra fresco raccomandata in % sulla farina
+   * Formula basata sulla curva di Arrhenius per la fermentazione di Saccharomyces cerevisiae
+   * 
+   * @param {number} roomHours - Ore a temperatura ambiente
+   * @param {number} fridgeHours - Ore in frigorifero (4°C)
+   * @param {number} tempC - Temperatura ambiente in gradi Celsius
+   * @returns {number} percentuale di lievito fresco sulla farina
+   */
+  calculateFreshYeastPercentage(roomHours, fridgeHours, tempC) {
+    // Normalizziamo le ore: 1 ora di frigo a 4°C equivale a circa 0.10 ore a temp ambiente
+    const effectiveHours = Math.max(roomHours + (fridgeHours * 0.10), 1.0);
+    
+    // Riferimento standard: a 20°C per 8 ore di lievitazione serve circa lo 0.20% di lievito fresco (2g per 1kg)
+    // Coeff di temperatura: raddoppia o dimezza ogni ~7-8°C
+    const tempFactor = Math.pow(1.08, 20 - tempC);
+    
+    // Calcolo percentuale base
+    let yeastPct = (1.6 / effectiveHours) * tempFactor;
+
+    // Limiti di sicurezza panificatoria (minimo 0.05%, massimo 2.5%)
+    yeastPct = Math.min(Math.max(yeastPct, 0.05), 2.5);
+
+    return yeastPct;
+  },
+
+  /**
+   * Calcola la ricetta completa basata sulle Percentuali del Fornaio
+   * 
+   * @param {Object} params
+   * @param {number} params.targetTotalWeight - Peso totale desiderato dell'impasto (in grammi)
+   * @param {number} params.hydration - Percentuale di idratazione (es. 65%)
+   * @param {number} params.salt - Percentuale di sale sulla farina (es. 2.8%)
+   * @param {number} params.oil - Percentuale di grassi/olio sulla farina (es. 2.5%)
+   * @param {number} params.sugar - Percentuale di zuccheri/malto sulla farina (default 0%)
+   * @param {number} params.roomHours - Ore a temperatura ambiente
+   * @param {number} params.fridgeHours - Ore in frigorifero (4°C)
+   * @param {number} params.tempC - Temperatura ambiente
+   * @param {string} params.yeastType - Tipo di lievito ('fresh', 'dry', 'solid', 'licoli')
+   */
+  calculate(params) {
+    const {
+      targetTotalWeight = 1000,
+      hydration = 65,
+      salt = 2.5,
+      oil = 0,
+      sugar = 0,
+      roomHours = 8,
+      fridgeHours = 0,
+      tempC = 21,
+      yeastType = "fresh"
+    } = params;
+
+    // Percentuale lievito di birra fresco base
+    const freshYeastPct = this.calculateFreshYeastPercentage(roomHours, fridgeHours, tempC);
+
+    let yeastPct = freshYeastPct;
+    let sourdoughFlourDeduction = 0;
+    let sourdoughWaterDeduction = 0;
+
+    if (yeastType === this.YEAST_TYPES.DRY) {
+      // 1g di lievito secco equivale a circa 3g o 3.2g di fresco
+      yeastPct = freshYeastPct / 3.0;
+    } else if (yeastType === this.YEAST_TYPES.SOURDOUGH_SOLID) {
+      // Pasta madre solida: standard 15-20% sulla farina
+      // Scala leggermente con le ore totali
+      const totalHours = roomHours + (fridgeHours * 0.2);
+      yeastPct = Math.max(12, Math.min(22, 18 - (totalHours * 0.3)));
+    } else if (yeastType === this.YEAST_TYPES.LICOLI) {
+      // Licoli (100% idratazione): standard 12-18% sulla farina
+      const totalHours = roomHours + (fridgeHours * 0.2);
+      yeastPct = Math.max(10, Math.min(20, 15 - (totalHours * 0.25)));
+    }
+
+    // Totale percentuale rispetto alla farina (Farina = 100%)
+    // Nella panificazione scientifica: PesoTotale = Farina * (1 + H/100 + S/100 + O/100 + Z/100 + Y/100)
+    const totalPercentageMultiplier = 1 + (hydration / 100) + (salt / 100) + (oil / 100) + (sugar / 100) + (yeastPct / 100);
+
+    // Calcolo ingredienti esatti
+    const flourGrams = Math.round((targetTotalWeight / totalPercentageMultiplier) * 10) / 10;
+    const waterGrams = Math.round(((flourGrams * hydration) / 100) * 10) / 10;
+    const saltGrams = Math.round(((flourGrams * salt) / 100) * 10) / 10;
+    const oilGrams = Math.round(((flourGrams * oil) / 100) * 10) / 10;
+    const sugarGrams = sugar > 0 ? Math.round(((flourGrams * sugar) / 100) * 10) / 10 : 0;
+    
+    // Grammi lievito con precisione al decimo di grammo
+    let yeastGrams = Math.round(((flourGrams * yeastPct) / 100) * 10) / 10;
+    if (yeastType === this.YEAST_TYPES.FRESH || yeastType === this.YEAST_TYPES.DRY) {
+      // Per lievito di birra sotto i 5g, diamo precisione a 2 decimali per massima accuratezza casalinga
+      yeastGrams = Math.round(((flourGrams * yeastPct) / 100) * 100) / 100;
+      if (yeastGrams < 0.1) yeastGrams = 0.1;
+    } else {
+      yeastGrams = Math.round(yeastGrams);
+    }
+
+    // Note scientifiche sul lievito madre se selezionato
+    let sourdoughAdvice = "";
+    if (yeastType === this.YEAST_TYPES.SOURDOUGH_SOLID) {
+      const pmFlour = Math.round((yeastGrams * 2) / 3);
+      const pmWater = Math.round(yeastGrams / 3);
+      sourdoughAdvice = `La pasta madre solida contiene già circa ${pmFlour}g di farina e ${pmWater}g di acqua. Rinfrescala 3-4 ore prima dell'uso al raddoppio.`;
+    } else if (yeastType === this.YEAST_TYPES.LICOLI) {
+      const licoliHalf = Math.round(yeastGrams / 2);
+      sourdoughAdvice = `Il Licoli contiene circa ${licoliHalf}g di farina e ${licoliHalf}g di acqua. Usalo al picco massimo di attività dopo il rinfresco.`;
+    }
+
+    const actualTotalWeight = Math.round((flourGrams + waterGrams + saltGrams + oilGrams + sugarGrams + yeastGrams) * 10) / 10;
+
+    return {
+      flour: flourGrams,
+      water: waterGrams,
+      salt: saltGrams,
+      oil: oilGrams,
+      sugar: sugarGrams,
+      yeast: yeastGrams,
+      yeastType,
+      yeastPct: Math.round(yeastPct * 100) / 100,
+      hydration,
+      actualTotalWeight,
+      sourdoughAdvice,
+      effectiveHours: Math.round((roomHours + (fridgeHours * 0.10)) * 10) / 10
+    };
+  },
+
+  /**
+   * Scompone gli ingredienti in Pre-fermento (Biga o Poolish) e Rinfresco finale
+   */
+  calculatePreferment(totalResult, method = "direct", prefermentPct = 50) {
+    if (method === "direct") {
+      return null;
+    }
+
+    if (method === "biga") {
+      const bigaFlour = Math.round(totalResult.flour * (prefermentPct / 100));
+      const bigaWater = Math.round(bigaFlour * 0.45); // 45% idratazione classica biga
+      let bigaYeast = Math.round((bigaFlour * 0.01) * 10) / 10; // 1% lievito fresco
+      if (totalResult.yeastType === this.YEAST_TYPES.DRY) {
+        bigaYeast = Math.round((bigaYeast / 3.0) * 10) / 10;
+      }
+      if (bigaYeast < 0.2) bigaYeast = 0.2;
+
+      const refreshFlour = Math.max(0, Math.round((totalResult.flour - bigaFlour) * 10) / 10);
+      const refreshWater = Math.max(0, Math.round((totalResult.water - bigaWater) * 10) / 10);
+
+      return {
+        method: "biga",
+        prefermentPct,
+        preferment: {
+          name: "Biga Tradizionale",
+          flour: bigaFlour,
+          water: bigaWater,
+          hydration: 45,
+          yeast: bigaYeast,
+          tempAdvice: "Fermentazione 16-24 ore a 16-18°C (cantina, camera fresca o parte alta del frigo a 14-16°C).",
+          prepNote: "NON impastare a lungo! Miscela solo finché non vedi farina asciutta. La massa deve rimanere grezza e spezzettata."
+        },
+        refresh: {
+          flour: refreshFlour,
+          water: refreshWater,
+          salt: totalResult.salt,
+          oil: totalResult.oil,
+          sugar: totalResult.sugar,
+          yeast: 0,
+          prepNote: "Aggiungi la biga a pezzetti spezzettati nella ciotola con una parte dell'acqua del rinfresco per scioglierla, poi unisci la farina restante, il sale e infine la restante acqua a filo."
+        }
+      };
+    }
+
+    if (method === "poolish") {
+      const poolishFlour = Math.round(totalResult.flour * (prefermentPct / 100));
+      const poolishWater = poolishFlour; // 100% idratazione
+      let poolishYeast = Math.round((poolishFlour * 0.003) * 100) / 100; // 0.3% lievito fresco
+      if (totalResult.yeastType === this.YEAST_TYPES.DRY) {
+        poolishYeast = Math.round((poolishYeast / 3.0) * 100) / 100;
+      }
+      if (poolishYeast < 0.1) poolishYeast = 0.1;
+
+      const refreshFlour = Math.max(0, Math.round((totalResult.flour - poolishFlour) * 10) / 10);
+      const refreshWater = Math.max(0, Math.round((totalResult.water - poolishWater) * 10) / 10);
+
+      return {
+        method: "poolish",
+        prefermentPct,
+        preferment: {
+          name: "Poolish Liquido",
+          flour: poolishFlour,
+          water: poolishWater,
+          hydration: 100,
+          yeast: poolishYeast,
+          tempAdvice: "Fermentazione 8-16 ore a 20-22°C fino al raddoppio e inizio di leggera concavità al centro.",
+          prepNote: "Mescola energicamente con una frusta o forchetta in un barattolo alto. Sigilla non ermeticamente."
+        },
+        refresh: {
+          flour: refreshFlour,
+          water: refreshWater,
+          salt: totalResult.salt,
+          oil: totalResult.oil,
+          sugar: totalResult.sugar,
+          yeast: 0,
+          prepNote: "Versa il poolish attivo nella ciotola, unisci l'acqua rimanente e la farina, poi chiudi con sale e olio."
+        }
+      };
+    }
+
+    return null;
+  },
+
+  /**
+   * Calcolo Temperatura Acqua (Regola dei 55 / Regola del Fornaio) per Pizzaioli PRO
+   */
+  calculateWaterTemp({ roomTemp = 21, flourTemp = 20, targetDoughTemp = 24, kneadingType = "hand" }) {
+    const frictionMap = {
+      hand: 2,
+      planetary: 6,
+      spiral: 9
+    };
+    const friction = frictionMap[kneadingType] !== undefined ? frictionMap[kneadingType] : 2;
+    // Formula aurea: T_acqua = (T_target * 3) - (T_ambiente + T_farina + Attrito)
+    const calculatedWaterTemp = Math.round(((targetDoughTemp * 3) - (roomTemp + flourTemp + friction)) * 10) / 10;
+    
+    let advice = "";
+    if (calculatedWaterTemp <= 4) {
+      advice = "Usa acqua fredda di frigorifero (4°C) o aggiungi cubetti di ghiaccio nell'acqua per non surriscaldare la maglia glutinica.";
+    } else if (calculatedWaterTemp >= 28) {
+      advice = "Usa acqua tiepida a circa 26-28°C per aiutare l'avvio della fermentazione in un ambiente fresco.";
+    } else {
+      advice = "Temperatura ottimale: puoi usare normale acqua fresca di rubinetto.";
+    }
+
+    return {
+      waterTemp: calculatedWaterTemp,
+      friction,
+      advice
+    };
+  }
+};
+
+// Esporta per compatibilità browser e Node
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { DoughCalculator };
+}
+
+
+
+// ==========================================
+// FILE: troubleshooter.js
+// ==========================================
+/**
+ * Maestro degli Impasti - Pronto Soccorso Impasti (Troubleshooting)
+ * Diagnostica scientifica dei problemi più comuni e rimedi della Teoria del Maestro
+ */
+
+const TROUBLESHOOTER_DATA = [
+  {
+    id: "appiccicoso_colla",
+    category: "Lavorazione & Impasto",
+    problem: "L'impasto sembra una colla informe e si attacca a mani e ciotola",
+    severity: "Molto comune",
+    icon: "alert-triangle",
+    symptom: "L'impasto si lacera, non si stacca dalle dita e sembra liquido o viscido anche dopo aver impastato a lungo.",
+    scientificCause: "Mancato sviluppo della maglia glutinica o temperatura dell'impasto salita sopra i 27°C, che scioglie i ponti disolfuro delle proteine. Spesso causato dall'aver aggiunto troppa acqua tutta insieme all'inizio invece che a filo.",
+    quickFix: "NON aggiungere pugni di farina asciutta (sbilanceresti la ricetta!). Fai un 'riposo tecnico' di 10 minuti coprendo l'impasto con una ciotola rovesciata. Inumidisci le mani con acqua o un velo d'olio e fai 3 pieghe slap-and-fold. Il glutine si formerà spontaneamente per rilassamento.",
+    prevention: "Nelle ricette con idratazione sopra il 65%, versa prima solo il 60% dell'acqua. Solo quando l'impasto è incordato e sodo, versa l'acqua rimanente a filo, un cucchiaio alla volta."
+  },
+  {
+    id: "elastico_ritiro",
+    category: "Stesura & Formatura",
+    problem: "Quando allargo il panetto della pizza, torna indietro come un elastico",
+    severity: "Comunissimo",
+    icon: "move",
+    symptom: "Allarghi il disco, ma si ritira immediatamente verso il centro, oppure se tiri si strappa creando buchi.",
+    scientificCause: "Glutine troppo tenace o panetto ancora freddo di frigorifero. Il reticolo di glutina non ha completato la fase di rilassamento viscoso (appretto insufficiente).",
+    quickFix: "Fermati immediatamente! Se continui a tirare romperai la maglia. Copri il panetto con la ciotola o una pellicola e aspetta 20-30 minuti a temperatura ambiente. Gli enzimi rilasseranno la tensione e si stenderà con la pressione di un dito.",
+    prevention: "Non stendere mai impasti freddi di frigo. Tira fuori i panetti almeno 2-3 ore prima della cottura e rispetta i tempi di appretto consigliati dal calcolatore."
+  },
+  {
+    id: "non_lievita",
+    category: "Fermentazione",
+    problem: "L'impasto non cresce: dopo 3 ore è ancora un mattone",
+    severity: "Grave",
+    icon: "clock",
+    symptom: "Nessun aumento di volume, assenza di bolle d'aria visibili, impasto compatto e pesante.",
+    scientificCause: "Lievito inibito o distrutto. Le cause tipiche: acqua usata sopra i 38°C (i lieviti muoiono a 45°C), contatto diretto prolungato tra sale puro e lievito prima dell'acqua, oppure ambiente troppo freddo (<18°C).",
+    quickFix: "Crea una cella di lievitazione naturale: metti l'impasto nel forno SPENTO con la LUCE ACCESA (la lampadina genera una temperatura costante di 26-28°C ideale per riattivare i lieviti). Se dopo 1 ora non dà cenni, il lievito era morto: puoi usarlo come 'pasta di riporto' per un nuovo impasto unendo altro lievito attivo.",
+    prevention: "Usa sempre acqua a temperatura ambiente (o fredda d'estate) e inserisci sempre il sale alla fine, mai a diretto contatto con il cubetto di lievito."
+  },
+  {
+    id: "panetti_liquefatti",
+    category: "Fermentazione",
+    problem: "I panetti si sono spiaccicati e fusi insieme in una massa molle",
+    severity: "Medio",
+    icon: "layers",
+    symptom: "I panetti hanno perso la forma sferica, sono piatti, pieni di bollicine fitte traslucide e quando provi a prenderli con la spatola si allungano come gomma liquida.",
+    scientificCause: "Sovralievitazione e sovramaturazione. L'attività enzimatica ha degradato completamente il glutine (proteolisi) e i lieviti hanno terminato gli zuccheri fermentabili.",
+    quickFix: "Raccogli delicatamente la massa con un tarocco unto. NON cercare di fare pizze tonde al volo. Versala direttamente in una teglia ben oliata, allargala delicatamente con le dita unte, metti pomodorini, origano e sale: trasformerai un fallimento in una splendida focaccia ad alta idratazione!",
+    prevention: "Se la temperatura della tua cucina è elevata (>24°C), riduci la quantità di lievito del 30% usando il nostro calcolatore o sposta l'impasto in frigorifero a 4°C per frenare la fermentazione."
+  },
+  {
+    id: "crosta_pallida_dura",
+    category: "Cottura",
+    problem: "La pizza esce dal forno bianca, pallida o secca come un biscotto",
+    severity: "Comune nei forni di casa",
+    icon: "sun",
+    symptom: "Manca la doratura tipica, il cornicione non si gonfia ed è duro da masticare, sapore piatto.",
+    scientificCause: "I forni domestici arrivano a 250°C (contro i 450°C del forno a legna o fornetto). Senza abbastanza zuccheri o grassi, a 250°C la reazione di Maillard (doratura) è lentissima e la pizza si disidrata prima di colorire.",
+    quickFix: "Per cuocere pizze tonde nel forno di casa: preriscalda la teglia o una pietra refrattaria per almeno 45 minuti sul ripiano più alto, vicinissima al grill. Inforna con il grill al massimo per irradiare calore infernale dall'alto.",
+    prevention: "Se usi il forno di casa standard, aggiungi all'impasto il 2-3% di olio extravergine d'oliva e mezzo cucchiaino di malto d'orzo o miele: doneranno doratura ambrata e manterranno la mollica morbida."
+  },
+  {
+    id: "focaccia_secca",
+    category: "Cottura",
+    problem: "La focaccia è asciutta, dura e sembra una schiacciata biscottata",
+    severity: "Comune",
+    icon: "droplet",
+    symptom: "Manca la sofficità umida interna, i buchi sono secchi e la superficie è friabile come un cracker.",
+    scientificCause: "Cottura a temperatura troppo bassa e prolungata (asciuga tutta l'acqua), oppure mancata emulsione della salamoia prima dell'infornata.",
+    quickFix: "Spennella subito la focaccia appena sfornata con un mix caldo di acqua tiepida e olio EVO e coprila per 5 minuti con un canovaccio pulito per intrappolare il vapore residuo.",
+    prevention: "La salamoia nei fori è l'anima della vera focaccia ligure: versa un'emulsione abbondante di acqua e olio EVO prima di infornare, e cuoci sempre alla massima temperatura possibile (230-250°C)."
+  }
+];
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { TROUBLESHOOTER_DATA };
+}
+
+
+// ==========================================
+// FILE: storage.js
+// ==========================================
+/**
+ * Maestro degli Impasti - Gestore Memoria Locale (LocalStorage)
+ * Salva ricette personalizzate, dosaggi preferiti e il Diario degli Impasti
+ */
+
+const DoughStorage = {
+  STORAGE_KEY_RECIPES: "maestro_impasti_custom_recipes",
+  STORAGE_KEY_JOURNAL: "maestro_impasti_journal",
+
+  // Inizializza con un esempio se vuoto
+  init() {
+    if (!localStorage.getItem(this.STORAGE_KEY_JOURNAL)) {
+      const initialEntry = [
+        {
+          id: "journal_1",
+          date: new Date().toLocaleDateString("it-IT"),
+          recipeName: "Pizza Napoletana Verace",
+          rating: 5,
+          hydration: 65,
+          notes: "Prima infornata riuscita benissimo! Cornicione alto, impasto morbido. Lasciato in frigo per 12h e poi 4h a temperatura ambiente."
+        }
+      ];
+      localStorage.setItem(this.STORAGE_KEY_JOURNAL, JSON.stringify(initialEntry));
+    }
+  },
+
+  // Recupera il diario degli impasti
+  getJournal() {
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY_JOURNAL);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.error("Errore lettura diario:", e);
+      return [];
+    }
+  },
+
+  // Aggiunge una voce al diario
+  addJournalEntry(entry) {
+    const journal = this.getJournal();
+    const newEntry = {
+      id: "journal_" + Date.now(),
+      date: new Date().toLocaleDateString("it-IT"),
+      ...entry
+    };
+    journal.unshift(newEntry);
+    localStorage.setItem(this.STORAGE_KEY_JOURNAL, JSON.stringify(journal));
+    return newEntry;
+  },
+
+  // Cancella una voce
+  deleteJournalEntry(id) {
+    let journal = this.getJournal();
+    journal = journal.filter(item => item.id !== id);
+    localStorage.setItem(this.STORAGE_KEY_JOURNAL, JSON.stringify(journal));
+    return journal;
+  },
+
+  // Salva ricetta personalizzata
+  saveCustomRecipe(recipe) {
+    try {
+      const custom = this.getCustomRecipes();
+      const newRecipe = {
+        ...recipe,
+        id: "custom_" + Date.now(),
+        isCustom: true
+      };
+      custom.unshift(newRecipe);
+      localStorage.setItem(this.STORAGE_KEY_RECIPES, JSON.stringify(custom));
+      return newRecipe;
+    } catch (e) {
+      console.error("Errore salvataggio ricetta:", e);
+      return null;
+    }
+  },
+
+  getCustomRecipes() {
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY_RECIPES);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+};
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { DoughStorage };
+}
+
+
+// ==========================================
+// FILE: agent.js
+// ==========================================
+/**
+ * Maestro degli Impasti - Agente Virtuale di Pronto Soccorso (Il Maestro AI)
+ * Architettura Ibrida: Motore Scientifico Locale Gratuito + Motore Gemini Flash (Free Tier)
+ */
+
+const MaestroAgent = {
+  apiKey: "",
+  isProcessing: false,
+  messages: [],
+  useActiveContext: true,
+
+  init() {
+    this.apiKey = localStorage.getItem("maestro_gemini_api_key") || "";
+    this.updateStatusBadge();
+    this.renderWelcomeMessage();
+    this.updateContextPill();
+  },
+
+  updateStatusBadge() {
+    const badge = document.getElementById("agent-status-badge");
+    if (!badge) return;
+
+    if (this.apiKey) {
+      badge.textContent = "Gemini 2.0 Flash (Attivo • Free Tier)";
+      badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1";
+    } else {
+      badge.textContent = "Motore Locale Gratuito (Attivo)";
+      badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-200 flex items-center gap-1";
+    }
+  },
+
+  updateContextPill() {
+    const pill = document.getElementById("agent-current-context-text");
+    if (!pill) return;
+
+    const recipe = (typeof RECIPES_DATA !== "undefined" && typeof AppState !== "undefined")
+      ? (RECIPES_DATA.find(r => r.id === AppState.selectedRecipeId) || { name: "Pizza" })
+      : { name: "Pizza" };
+
+    const hydro = document.getElementById("input-hydration")?.value || "65";
+    const oven = (typeof OVENS_DATA !== "undefined" && typeof AppState !== "undefined")
+      ? (OVENS_DATA.find(o => o.id === AppState.selectedOvenId) || { name: "Forno" })
+      : { name: "Forno di Casa" };
+
+    const method = AppState?.selectedMethod === "biga" ? "Biga" : (AppState?.selectedMethod === "poolish" ? "Poolish" : "Diretto");
+
+    pill.textContent = `${recipe.name} (${method}) • ${hydro}% Idro • ${oven.name}`;
+  },
+
+  renderWelcomeMessage() {
+    if (this.messages.length === 0) {
+      const welcome = {
+        role: "maestro",
+        text: `👋 **Ciao! Sono il tuo Maestro Panificatore virtuale.**\nHai un problema con l'impasto in questo momento?\n\nDescrivimi con parole tue cosa sta succedendo (oppure clicca uno dei problemi rapidi qui sotto) e troveremo subito la soluzione scientifica per salvarlo!`
+      };
+      this.messages.push(welcome);
+    }
+
+    const container = document.getElementById("agent-chat-messages");
+    if (container) {
+      this.renderMessages();
+    }
+  },
+
+  renderMessages() {
+    const container = document.getElementById("agent-chat-messages");
+    if (!container) return;
+
+    container.innerHTML = "";
+    this.messages.forEach(msg => {
+      const isUser = msg.role === "user";
+      const div = document.createElement("div");
+      div.className = isUser ? "flex justify-end mb-3" : "flex justify-start mb-3";
+
+      const bubble = document.createElement("div");
+      bubble.className = isUser
+        ? "max-w-[85%] bg-amber-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-xs shadow-sm font-medium"
+        : "max-w-[90%] bg-stone-100 border border-stone-200/90 text-stone-800 rounded-2xl rounded-tl-sm px-4 py-3 text-xs shadow-sm space-y-1.5";
+
+      if (isUser) {
+        bubble.textContent = msg.text;
+      } else {
+        bubble.innerHTML = this.formatMarkdown(msg.text);
+      }
+
+      div.appendChild(bubble);
+      container.appendChild(div);
+    });
+
+    container.scrollTop = container.scrollHeight;
+    if (window.lucide) lucide.createIcons();
+  },
+
+  formatMarkdown(text) {
+    let html = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-stone-900 font-bold">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+      .replace(/\n\n/g, '<br><br>')
+      .replace(/\n• /g, '<br>• ')
+      .replace(/\n- /g, '<br>• ')
+      .replace(/\n(\d+)\. /g, '<br><strong>$1.</strong> ');
+
+    return html;
+  },
+
+  async handleUserSubmit(e) {
+    if (e) e.preventDefault();
+    if (this.isProcessing) return;
+
+    const input = document.getElementById("agent-chat-input");
+    if (!input) return;
+
+    const userText = input.value.trim();
+    if (!userText) return;
+
+    input.value = "";
+    await this.sendUserMessage(userText);
+  },
+
+  async sendQuickPrompt(promptText) {
+    if (this.isProcessing) return;
+    await this.sendUserMessage(promptText);
+  },
+
+  async sendUserMessage(text) {
+    this.isProcessing = true;
+    this.messages.push({ role: "user", text });
+    this.renderMessages();
+
+    // Mostra indicatore di digitazione
+    const container = document.getElementById("agent-chat-messages");
+    const typingIndicator = document.createElement("div");
+    typingIndicator.id = "agent-typing-indicator";
+    typingIndicator.className = "flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 p-2.5 rounded-xl max-w-[200px] border border-amber-200/60 mb-2";
+    typingIndicator.innerHTML = `
+      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+      <span class="font-bold">Il Maestro sta ragionando...</span>
+    `;
+    container.appendChild(typingIndicator);
+    container.scrollTop = container.scrollHeight;
+
+    // Recupera contesto impasto corrente
+    const contextStr = this.buildContextString();
+
+    let reply = "";
+    if (this.apiKey) {
+      reply = await this.callGeminiAPI(text, contextStr);
+    } else {
+      // 1. Prova prima il backend serverless (attivo quando ospitato online o su app Android)
+      const serverReply = await this.callBackendServerless(text, contextStr);
+      if (serverReply) {
+        reply = serverReply;
+      } else {
+        // 2. Fallback istantaneo sul motore locale (offline o locale)
+        await new Promise(r => setTimeout(r, 400));
+        reply = this.matchLocalKnowledge(text, contextStr);
+      }
+    }
+
+    typingIndicator.remove();
+    this.messages.push({ role: "maestro", text: reply });
+    this.renderMessages();
+    this.isProcessing = false;
+  },
+
+  async callBackendServerless(userQuery, contextStr) {
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userQuery, context: contextStr })
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data && data.available && data.reply) {
+        return data.reply;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  buildContextString() {
+    const cb = document.getElementById("agent-include-context-checkbox");
+    if (cb && !cb.checked) return "";
+
+    const recipe = (typeof RECIPES_DATA !== "undefined" && typeof AppState !== "undefined")
+      ? (RECIPES_DATA.find(r => r.id === AppState.selectedRecipeId) || { name: "Pizza Classica" })
+      : { name: "Pizza Classica" };
+
+    const hydro = document.getElementById("input-hydration")?.value || "65";
+    const roomHours = document.getElementById("input-room-hours")?.value || "8";
+    const fridgeHours = document.getElementById("input-fridge-hours")?.value || "0";
+    const oven = (typeof OVENS_DATA !== "undefined" && typeof AppState !== "undefined")
+      ? (OVENS_DATA.find(o => o.id === AppState.selectedOvenId) || { name: "Forno di Casa 250°C" })
+      : { name: "Forno di Casa 250°C" };
+    const method = AppState?.selectedMethod === "biga" ? "Biga" : (AppState?.selectedMethod === "poolish" ? "Poolish" : "Diretto");
+
+    return `Contesto attivo dell'utente: Ricetta=${recipe.name}, Metodo=${method}, Idratazione=${hydro}%, Lievitazione=${roomHours}h ambiente + ${fridgeHours}h frigo, Forno a disposizione=${oven.name}.`;
+  },
+
+  // ============================================================
+  // MOTORE LOCALE ESPERTO (100% GRATUITO E OFFLINE)
+  // ============================================================
+  matchLocalKnowledge(query, contextStr) {
+    const q = query.toLowerCase();
+
+    // 1. PIZZA BRUCIATA SOTTO / FONDO NERO / PIETRA TROPPO CALDA
+    const isBurnt = q.includes("brucia") || q.includes("carbonizz") || q.includes("ner") || q.includes("cenere");
+    const isBottom = q.includes("sotto") || q.includes("fondo") || q.includes("base") || q.includes("pietra") || q.includes("leccarda");
+
+    if (isBurnt && isBottom) {
+      return `🩺 **Diagnosi del Maestro:** Pizza bruciata sotto! Ci sono 3 cause scientifiche principali:
+1. **Eccesso di farina cruda di spolvero sul fondo:** La farina 00 brucia e carbonizza a 250-300°C trasformandosi in una patina amara e nera di cenere.
+2. **Pietra refrattaria (cordierite) troppo rovente:** La pietra accumula troppo calore e conduce calore alla base prima che la parte superiore sia cotta.
+3. **Zucchero, Malto o Olio nell'impasto a temperature >350°C:** Zuccheri e grassi accelerano bruscamente la reazione di Maillard e bruciano a temperature da forno pizza.
+\n🚨 **Pronto Soccorso Immediato (Come salvarla ADESSO):**
+• **NON buttarla!** Prendi una **grattugia da formaggio (o Microplane)** oppure la lama seghettata di un coltello da pane.
+• Capovolgi la pizza sul tagliere e **raschia via delicatamente la patina nera bruciata**. In 30 secondi rimuoverai tutta la cenere amara senza rovinare l'impasto interno e la mozzarella!
+• Versa un filo d'olio EVO a crudo e un pizzico di origano per bilanciare il sapore.
+\n💡 **Per la prossima volta:**
+• Usa **solo semola rimacinata** per stendere e scuoti bene il disco prima di infornare (o usa una **pala forata** per far cadere tutta la farina in eccesso).
+• Per fornetti o forni a gas (>380°C), elimina completamente zucchero, miele o olio dall'impasto della napoletana.
+• Se usi forni ad altissima temperatura, la pietra in cordierite è troppo aggressiva: passa a un *Biscotto di Casapulla o Sorrento* a bassa conducibilità.`;
+    }
+
+    // 2. PIZZA BRUCIATA SOPRA / CORNICIONE O MOZZARELLA BRUCIATA
+    const isTop = q.includes("sopra") || q.includes("cornicione") || q.includes("mozzarella") || q.includes("superficie") || q.includes("condimento");
+    if (isBurnt && isTop) {
+      return `🩺 **Diagnosi del Maestro:** Calore superiore o fiamma troppo aggressivi, oppure mozzarella inserita troppo presto.
+\n🚨 **Pronto Soccorso Immediato:**
+• Taglia delicatamente le parti annerite del cornicione con delle forbici da cucina prima di servire.
+\n💡 **Per la prossima volta:**
+• Applica la **cottura in due tempi**: cuoci prima la base solo con il pomodoro. Quando mancano 1-2 minuti al termine, estrai la teglia/pizza, aggiungi la mozzarella (ben strizzata e fredda) e rimetti dentro per fonderla senza bruciarla.
+• Nei forni a gas (Ooni / Munaciello), appena inforni **abbassa subito la fiamma al minimo** per non bruciare il cornicione prima che il fondo sia cotto.`;
+    }
+
+    // 3. PIZZA BRUCIATA IN GENERALE
+    if (isBurnt) {
+      return `🩺 **Diagnosi del Maestro:** Eccesso di temperatura o tempo di cottura troppo prolungato.
+\n🚨 **Pronto Soccorso Immediato:**
+• Capovolgi la pizza e controlla se è bruciata sotto: usa una grattugia Microplane per asportare la crosticina amara bruciata.
+• Se è bruciato solo il cornicione, rimuovi le parti nere con delle forbici.
+\n💡 **Per la prossima volta:**
+• Controlla la temperatura con un termometro laser prima di infornare. Per forno di casa resta sui 250°C, per fornetti pizza non superare i 430°C sulla pietra se è cordierite.`;
+    }
+
+    // 4. PIZZA CRUDA DENTRO / GOMMOSA / NON CUOCE AL CENTRO
+    if (q.includes("cruda") || q.includes("gommosa") || q.includes("pasta cruda") || q.includes("alveoli umidi") || q.includes("pesante")) {
+      return `🩺 **Diagnosi del Maestro:** La crosta si è sigillata prima che il vapore interno potesse evaporare. Tipico di forni con troppo calore sopra e poco sotto, oppure di mozzarella troppo acquosa che ha allagato il centro.
+\n🚨 **Pronto Soccorso Immediato:**
+• Rimetti la pizza in forno a bassa temperatura (180-200°C ventilato) posizionata direttamente sulla griglia centrale per 3-4 minuti: lascerà asciugare l'umidità interna della mollica.
+\n💡 **Per la prossima volta:**
+• Taglia e fai scolare la mozzarella in un colino in frigo per almeno 3-4 ore prima di usarla.
+• Non esagerare con il pomodoro al centro: stendi il condimento lasciando sempre 2 cm di cornicione libero.`;
+    }
+
+    // 5. ATTACCATA ALLA PALA / NON SCIVOLA
+    if (q.includes("pala") || q.includes("scivola") || q.includes("incollat") || q.includes("appiccicata alla pala")) {
+      return `🩺 **Diagnosi del Maestro:** La pizza è rimasta troppo tempo condita sulla pala, oppure il pomodoro è colato sul bordo bagnando l'alluminio/legno.
+\n🚨 **Pronto Soccorso Immediato (Salvataggio in extremis):**
+• NON tirare con forza, si squarcerebbe!
+• Solleva delicatamente un lembo con una spatolina e **soffia con forza sotto la pizza** (effetto cuscinetto d'aria).
+• Spargi un pizzico di semola rimacinata sotto la parte sollevata.
+• Se è irrecuperabile e bucata: chiudila a metà a portafoglio e infornala come un **Calzone ripieno**!
+\n💡 **Per la prossima volta:** Condisci la pizza velocemente (massimo 20-30 secondi sulla pala) e usa sempre una spolverata di semola rimacinata sulla pala prima di caricare il disco.`;
+    }
+
+    // 6. IMPASTO APPICCICOSO / COLLA
+    if (q.includes("appiccicos") || q.includes("colla") || q.includes("viscid") || q.includes("attacca") || q.includes("mollicci")) {
+      return `🩺 **Diagnosi del Maestro:** Mancato sviluppo della maglia glutinica oppure impasto surriscaldato (sopra i 26-27°C). Aggiungere farina a pugni adesso sbilancerebbe il sale e l'idratazione.
+\n🚨 **Pronto Soccorso Immediato:**
+• Fermati subito e non impastare oltre.
+• Copri la massa con una ciotola rovesciata e fai un **riposo tecnico di 10 minuti** al fresco. Il glutine si rilassa e si struttura spontaneamente (idratazione passiva).
+• Inumidisci leggermente le mani con acqua fredda (o un velo d'olio EVO) ed esegui 3 pieghe sul banco (slap & fold). Vedrai che la massa prenderà corpo come per magia!
+\n💡 **Per la prossima volta:** Versa sempre l'acqua in due tempi: il 65% all'inizio e il restante 35% solo a filo quando la maglia è già formata.`;
+    }
+
+    // 7. IMPASTO CHE SI RITIRA / ELASTICO
+    if (q.includes("ritira") || q.includes("elastico") || q.includes("torna indietro") || q.includes("rigido") || q.includes("resiste")) {
+      return `🩺 **Diagnosi del Maestro:** Fenomeno di tenacia eccessiva del glutine. I panetti non hanno completato l'appretto o sono stati maneggiati con troppa forza.
+\n🚨 **Pronto Soccorso Immediato:**
+• Non forzare la stesura! Se tiri a forza, strappi la maglia glutinica e perdi tutta l'aria nel cornicione.
+• Lascia i dischi sul banco coperti con un telo o pellicola e **aspetta 20-30 minuti**. Il glutine perderà rigidità per rilassamento viscoelastico e si stenderà docilmente con la sola pressione delle dita.
+\n💡 **Per la prossima volta:** Allunga i tempi di appretto di almeno 1 ora prima di stendere, assicurandoti che i panetti siano a temperatura ambiente (circa 20°C).`;
+    }
+
+    // 8. PANETTI SGONFI / SOVRALIEVITATI
+    if (q.includes("sgonf") || q.includes("piatt") || q.includes("spiattellat") || q.includes("sovralievit") || q.includes("troppo lievitat") || q.includes("liquefatt")) {
+      return `🩺 **Diagnosi del Maestro:** Sovralievitazione! I lieviti hanno esaurito gli zuccheri e gli enzimi proteolitici hanno iniziato a degradare la maglia glutinica, che non riesce più a trattenere i gas.
+\n🚨 **Pronto Soccorso Immediato:**
+• NON re-impastare le palline (distruggeresti la poca struttura rimasta).
+• Raccogli delicatamente la massa con una spatola e riversala direttamente in una teglia unta d'olio.
+• Stendi delicatamente con le dita unte, cospargi con una salamoia (acqua, olio e sale grosso) o pomodoro e inforna ad alta temperatura: otterrai una **focaccia ad alta idratazione strepitosa**!
+\n💡 **Per la prossima volta:** Riduci il lievito del 30% oppure metti i panetti in frigo a 4°C per frenare la fermentazione se devi ritardare l'infornata.`;
+    }
+
+    // 9. FORNO DI CASA / SOTTO BIANCO / PALLIDO
+    if (q.includes("bianc") || q.includes("sotto non cuoce") || q.includes("cruda sotto") || q.includes("pallid") || q.includes("non fa la crosta")) {
+      return `🩺 **Diagnosi del Maestro:** Mancanza di spinta termica per conduzione dal fondo. Il classico forno di casa a 250°C trasferisce calore lentamente rispetto a una platea refrattaria rovente.
+\n🚨 **Pronto Soccorso Immediato (Tecnica Padella + Grill):**
+• Se stai cuocendo una pizza tonda nel forno di casa: accendi una padella antiaderente o in ghisa sul fornello a gas finché è rovente.
+• Adagia il disco steso in padella e cuoci il fondo sul gas per 90-120 secondi (farà subito le tipiche macchie brunicole e gonfierà il cornicione).
+• Nel frattempo accendi il grill del forno al massimo: trasferisci la pizza sotto la resistenza superiore per altri 2 minuti per dorare il cornicione e sciogliere la mozzarella!
+\n💡 **Per la prossima volta:** Aggiungi il 2.5% di olio EVO e l'1% di malto o miele nell'impasto per favorire la reazione di Maillard e la doratura a 250°C.`;
+    }
+
+    // 10. NON LIEVITA / FERMO
+    if (q.includes("non lievita") || q.includes("fermo") || q.includes("non cresce") || q.includes("morto") || q.includes("bloccato")) {
+      return `🩺 **Diagnosi del Maestro:** Shock termico o temperatura troppo bassa. Se hai usato acqua troppo calda (>45°C) potresti aver inattivato i lieviti; se invece è troppo freddo (<18°C), i lieviti sono semplicemente 'addormentati'.
+\n🚨 **Pronto Soccorso Immediato:**
+• Trasferisci la ciotola coperta all'interno del **forno spento con la sola luce accesa** (crea una camera di lievitazione a circa 26-28°C ideali).
+• Metti accanto una tazzina d'acqua bollente per creare umidità.
+• Se dopo 2 ore non vedi nessun accenno di rigonfiamento, sciogli 1-2g di lievito fresco in due cucchiai di acqua tiepida e incorporalo delicatamente nella massa con qualche piega.
+\n💡 **Per la prossima volta:** Usa acqua a 20-22°C d'inverno e calcola la temperatura dell'acqua con la nostra *Regola del 55* nella scheda PRO.`;
+    }
+
+    // 11. STRAPPI NELLA STESURA / BUCHI
+    if (q.includes("strapp") || q.includes("buco") || q.includes("rompe") || q.includes("buchi") || q.includes("lacera")) {
+      return `🩺 **Diagnosi del Maestro:** La stesura ha toccato il centro con troppa violenza o il panetto era ancora freddo di frigorifero.
+\n🚨 **Pronto Soccorso Immediato:**
+• Se si apre un piccolo buco sul banco: non buttare il disco! Prendi un pizzico di pasta dal bordo esterno (cornicione), appoggialo sopra al buco e picchietta con un po' di semola. Si salderà in cottura.
+• Quando stendi, allarga l'aria dal centro verso l'esterno con i polpastrelli piatti senza mai tirare o sollevare la pizza per aria se non hai ancora la manualità del pizzaiolo.
+\n💡 **Per la prossima volta:** Usa sempre abbondante semola rimacinata sul piano di stesura e fai acclimatare i panetti a temperatura ambiente per almeno 2 ore dopo il frigo.`;
+    }
+
+    // 12. IMPASTO ACIDO / ODORE ALCOL
+    if (q.includes("acid") || q.includes("alcol") || q.includes("aceto") || q.includes("puzza")) {
+      return `🩺 **Diagnosi del Maestro:** Fermentazione lattica e acetica eccessiva, dovuta a lievitazione prolungata oltre il punto di maturazione ottimale o pre-fermento sovra-fermentato.
+\n🚨 **Pronto Soccorso Immediato:**
+• Non puoi azzerare l'acidità chimica, ma puoi mascherarla: cuoci condendo con formaggi sapidi (pecorino, gorgonzola) e pomodoro dolce ben bilanciato con un pizzico di zucchero.
+\n💡 **Per la prossima volta:** Riduci le ore a temperatura ambiente o rinfresca il pre-fermento (Biga o Poolish) con 2 ore di anticipo.`;
+    }
+
+    // 13. TROPPO SALATO O SENZA SALE
+    if (q.includes("salato") || q.includes("sale")) {
+      if (q.includes("dimenticat") || q.includes("senza sale") || q.includes("manca")) {
+        return `🩺 **Diagnosi del Maestro:** Impasto senza sale! Il sale non dà solo sapidità, ma rinforza la maglia glutinica e frena la fermentazione. Senza sale l'impasto lieviterà molto più in fretta e sarà più fragile.
+\n🚨 **Pronto Soccorso Immediato:**
+• Se sei ancora in fase di impasto: sciogli il sale dovuto in un cucchiaio d'acqua e incorporalo facendo pieghe.
+• Se i panetti sono già formati o in cottura: condisci la superficie con fiordilatte sapido, un pizzico di sale Maldon sui bordi e acciughe o capperi.`;
+      }
+      return `🩺 **Diagnosi del Maestro:** Eccesso di sale. Il sale rallenta la lievitazione e rende il glutine molto rigido.
+\n🚨 **Pronto Soccorso Immediato:**
+• Allunga i tempi di appretto e usa condimenti a bassissima sapidità (pomodoro dolce senza sale aggiunto, fiordilatte fresco, basilico).`;
+    }
+
+    // 14. PRE-FERMENTI (BIGA / POOLISH)
+    if (q.includes("biga") || q.includes("poolish") || q.includes("prefermento")) {
+      return `🩺 **Consiglio Tecnico del Maestro sui Pre-fermenti:**
+• **Se la Biga sembra troppo secca al tatto:** È NORMALE! La biga deve essere sgranata e al 45% di idratazione senza impastare, per non sviluppare glutine prima del tempo.
+• **Se il Poolish ha fatto la schiuma ed è collassato:** Va usato subito. Quando il centro comincia a cedere leggermente, ha raggiunto il picco enzimatico e va rinfrescato per non diventare acido.
+\n💡 **Formula d'oro:** Chiudi sempre la biga spezzettandola nell'acqua di rinfresco fredda (non nella farina) per scioglierla senza grumi.`;
+    }
+
+    // 15. RISPOSTA CONTESTUALE GENERICA (SE PARLA DI PIZZA SFORNATA / COTTURA)
+    if (q.includes("pizza") || q.includes("cotto") || q.includes("sfornat") || q.includes("bruci")) {
+      return `🩺 **Consiglio di Cottura del Maestro:**
+Ho analizzato la tua domanda: *"${query}"*${contextStr ? ` (impostazioni attive: ${contextStr})` : ''}.
+\nI 3 fattori chiave della cottura perfetta:
+1. **Pala forata e niente farina in eccesso:** Il 90% delle bruciature e dell'amaro sul fondo deriva dalla farina di grano tenero rimasta attaccata al disco che carbonizza sulla pietra.
+2. **Equilibrio Calore Fondo / Calore Cielo:** La pietra deve cuocere la base nello stesso identico tempo in cui la volta del forno dora il cornicione.
+3. **Se la pizza è già uscita male:** Usa una grattugia Microplane sul fondo per togliere il bruciato, oppure una forbice per rifilare il cornicione annerito.`;
+    }
+
+    // 16. RISPOSTA GENERICA PER FASE D'IMPASTO
+    return `🩺 **Consiglio Scientifico del Maestro:**
+Ho analizzato la tua richiesta: *"${query}"*${contextStr ? ` considerando il tuo impasto in corso (${contextStr})` : ''}.
+\nEcco i 3 principi cardine della Teoria del Maestro da applicare subito:
+1. **Non farti prendere dal panico:** In panificazione la maggior parte degli intoppi si risolve dando tempo all'impasto di rilassarsi coperto per 15-20 minuti.
+2. **Umidità e Calore:** Se la massa è dura o non lievita, mettila al riparo da correnti nel forno con la luce accesa (26°C). Se è troppo calda e collassa, passala 20 minuti in frigorifero.
+3. **Pieghe di Rinforzo:** Se sei in lavorazione, fai 3 pieghe a portafoglio (slap & fold) per dare struttura e allineare la maglia glutinica senza aggiungere farina asciutta.
+\nVuoi dettagli specifici su un passaggio in particolare? Chiedimi pure!`;
+  },
+
+  // ============================================================
+  // MOTORE GEMINI FLASH REST API (FREE TIER DI GOOGLE)
+  // ============================================================
+  async callGeminiAPI(userQuery, contextStr) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`;
+
+    const systemPrompt = `Sei 'Il Maestro Panificatore', un maestro pizzaiolo e panificatore esperto, caloroso, scientifico e pratico. Insegni secondo la Teoria del Maestro.
+Quando un utente ti descrive un problema o un'emergenza con l'impasto, rispondi sempre con questo schema:
+1. 🩺 **Diagnosi Rapida e Rassicurante** (spiega cosa è successo a livello di glutine, fermentazione o temperatura in 2 frasi).
+2. 🚨 **Pronto Soccorso Immediato** (istruzioni chiare e pratiche su cosa fare ADESSO per salvare l'impasto senza buttare nulla).
+3. 💡 **Per la Prossima Volta** (consiglio tecnico preventivo).
+Usa elenchi puntati, tono amichevole e autorevole. Mantieni la risposta sintetica ed efficace.`;
+
+    const fullPrompt = `${contextStr ? `[CONTESTO ATTUALE: ${contextStr}]\n\n` : ''}DOMANDA UTENTE: ${userQuery}`;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: fullPrompt }]
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        console.error("Gemini API Error:", errData);
+        if (response.status === 400 || response.status === 403) {
+          return `⚠️ **Attenzione:** La chiave Gemini inserita non risulta valida o autorizzata. Verifica la chiave su Google AI Studio.\n\nNel frattempo, ecco il consiglio del motore locale gratuito:\n\n${this.matchLocalKnowledge(userQuery, contextStr)}`;
+        }
+        return `⚠️ Si è verificato un errore di connessione con l'API. Ecco il consiglio del motore locale gratuito:\n\n${this.matchLocalKnowledge(userQuery, contextStr)}`;
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      return text || this.matchLocalKnowledge(userQuery, contextStr);
+    } catch (e) {
+      console.error("Network Error calling Gemini:", e);
+      return `⚠️ Connessione internet assente o bloccata. Ecco la diagnosi del motore locale integrato:\n\n${this.matchLocalKnowledge(userQuery, contextStr)}`;
+    }
+  },
+
+  // ============================================================
+  // GESTIONE CHIAVE GEMINI MODAL
+  // ============================================================
+  openKeyModal() {
+    const modal = document.getElementById("gemini-key-modal");
+    const input = document.getElementById("input-gemini-key");
+    if (input) input.value = this.apiKey;
+    if (modal) modal.classList.remove("hidden");
+  },
+
+  closeKeyModal() {
+    const modal = document.getElementById("gemini-key-modal");
+    if (modal) modal.classList.add("hidden");
+  },
+
+  saveKeyConfirm() {
+    const input = document.getElementById("input-gemini-key");
+    const val = input ? input.value.trim() : "";
+    this.apiKey = val;
+    if (val) {
+      localStorage.setItem("maestro_gemini_api_key", val);
+    } else {
+      localStorage.removeItem("maestro_gemini_api_key");
+    }
+    this.updateStatusBadge();
+    this.closeKeyModal();
+  },
+
+  clearChat() {
+    this.messages = [];
+    this.renderWelcomeMessage();
+  }
+};
+
+// Esponi esplicitamente su window per accesso globale
+window.MaestroAgent = MaestroAgent;
+
+
+// ==========================================
+// FILE: app.js
+// ==========================================
+/**
+ * Maestro degli Impasti - Controller Principale dell'Applicazione
+ * Gestione Tab, Calcolatore Reattivo, Timer Web Audio, Scuola e Diario
+ */
+
+// Stato Applicazione
+const AppState = {
+  activeTab: "calculator",
+  experienceMode: "beginner", // 'beginner' | 'pro'
+  selectedCategory: "pizza",  // 'pizza' | 'focaccia' | 'pane'
+  selectedRecipeId: "pizza_classica",
+  selectedMethod: "direct",   // 'direct' | 'biga' | 'poolish'
+  prefermentPct: 50,
+  selectedYeastType: "fresh",
+  selectedOvenId: "home_standard",
+  suggestedRecipeId: "pizza_teglia_romana",
+  showAdvanced: false,
+  timer: {
+    intervalId: null,
+    remainingSeconds: 0,
+    title: "",
+    runningStep: null,
+    audioContext: null
+  }
+};
+
+// Inizializzazione al caricamento del DOM
+document.addEventListener("DOMContentLoaded", () => {
+  DoughStorage.init();
+  initRecipeSelectors();
+  initTroubleshooter();
+  initJournal();
+  if (typeof MaestroAgent !== "undefined") {
+    MaestroAgent.init();
+  }
+  
+  // Imposta la ricetta iniziale e calcola
+  selectCategory(AppState.selectedCategory);
+  applyRecipeDefaults(AppState.selectedRecipeId);
+  updateCalculator();
+  loadAcademyRecipe(AppState.selectedRecipeId);
+
+  // Inizializza icone Lucide
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+
+  // Registrazione Service Worker per PWA e installazione su Android
+  if ("serviceWorker" in navigator && (window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js")
+        .then(reg => console.log("[PWA] Service Worker registrato:", reg.scope))
+        .catch(err => console.log("[PWA] Service Worker fallito:", err));
+    });
+  }
+});
+
+// ==========================================
+// GESTIONE NAVIGAZIONE & TAB
+// ==========================================
+function switchTab(tabId) {
+  AppState.activeTab = tabId;
+
+  // Mostra solo la tab attiva
+  document.querySelectorAll(".tab-content").forEach(el => {
+    el.classList.add("hidden");
+    el.classList.remove("block");
+  });
+
+  const target = document.getElementById(`tab-${tabId}`);
+  if (target) {
+    target.classList.remove("hidden");
+    target.classList.add("block");
+  }
+
+  // Aggiorna navbar desktop
+  document.querySelectorAll(".nav-tab").forEach(btn => {
+    btn.classList.remove("bg-stone-700/80", "text-white", "shadow-sm");
+    btn.classList.add("text-stone-400");
+  });
+  const activeNav = document.getElementById(`nav-${tabId}`);
+  if (activeNav) {
+    activeNav.classList.remove("text-stone-400");
+    activeNav.classList.add("bg-stone-700/80", "text-white", "shadow-sm");
+  }
+
+  // Aggiorna navbar mobile
+  document.querySelectorAll(".mobile-nav-btn").forEach(btn => {
+    if (btn.getAttribute("data-tab") === tabId) {
+      btn.classList.remove("text-stone-400");
+      btn.classList.add("text-amber-500");
+    } else {
+      btn.classList.remove("text-amber-500");
+      btn.classList.add("text-stone-400");
+    }
+  });
+
+  if (tabId === "academy") {
+    loadAcademyRecipe(AppState.selectedRecipeId);
+  } else if (tabId === "journal") {
+    renderJournal();
+  } else if (tabId === "troubleshooter") {
+    if (window.MaestroAgent) MaestroAgent.updateContextPill();
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (window.lucide) lucide.createIcons();
+}
+
+function initRecipeSelectors() {
+  const academySelect = document.getElementById("academy-recipe-changer");
+  if (academySelect && typeof RECIPES_DATA !== "undefined") {
+    academySelect.innerHTML = "";
+    RECIPES_DATA.forEach(recipe => {
+      const option = document.createElement("option");
+      option.value = recipe.id;
+      option.textContent = `${recipe.name} (${recipe.category.toUpperCase()})`;
+      academySelect.appendChild(option);
+    });
+    academySelect.value = AppState.selectedRecipeId;
+  }
+}
+
+function onRecipeChange(recipeId) {
+  const recipe = (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA : []).find(r => r.id === recipeId);
+  if (recipe) {
+    selectCategory(recipe.category);
+    selectStyleRecipe(recipeId);
+  }
+}
+
+// ==========================================
+// GESTIONE LIVELLO ESPERIENZA (PRINCIPIANTE VS PRO)
+// ==========================================
+function setExperienceMode(mode) {
+  AppState.experienceMode = mode;
+
+  const btnBeginner = document.getElementById("btn-mode-beginner");
+  const btnPro = document.getElementById("btn-mode-pro");
+  const badgeLevel = document.getElementById("badge-experience-level");
+  const descEl = document.getElementById("experience-mode-desc");
+  const waterTempCard = document.getElementById("pro-water-temp-card");
+  const prefermentPctRow = document.getElementById("preferment-percentage-row");
+
+  if (mode === "pro") {
+    if (btnPro) {
+      btnPro.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-stone-900 shadow-sm";
+    }
+    if (btnBeginner) {
+      btnBeginner.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-stone-500 hover:text-stone-800";
+    }
+    if (badgeLevel) {
+      badgeLevel.textContent = "Pizzaiolo PRO";
+      badgeLevel.className = "text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.2 rounded-full border border-blue-200";
+    }
+    if (descEl) {
+      descEl.textContent = "Modalità Esperto: sbloccati pre-fermenti (Biga/Poolish), Regola del 55 e parametri avanzati";
+    }
+
+    // Mostra card calcolo temperatura acqua
+    if (waterTempCard) waterTempCard.classList.remove("hidden");
+
+    // Mostra slider pre-fermento se metodo non è diretto
+    if (prefermentPctRow && AppState.selectedMethod !== "direct") {
+      prefermentPctRow.classList.remove("hidden");
+    }
+
+    // Apri opzioni avanzate se chiuse
+    if (!AppState.showAdvanced) {
+      toggleAdvancedParams();
+    }
+  } else {
+    // Beginner Mode
+    if (btnBeginner) {
+      btnBeginner.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-stone-900 shadow-sm";
+    }
+    if (btnPro) {
+      btnPro.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-stone-500 hover:text-stone-800";
+    }
+    if (badgeLevel) {
+      badgeLevel.textContent = "Semplice";
+      badgeLevel.className = "text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.2 rounded-full border border-green-200";
+    }
+    if (descEl) {
+      descEl.textContent = "Principiante: dosaggi perfetti e intuitivi senza complicazioni";
+    }
+
+    if (waterTempCard) waterTempCard.classList.add("hidden");
+  }
+
+  updateCalculator();
+  if (window.lucide) lucide.createIcons();
+}
+
+// ==========================================
+// SELETTORE CATEGORIA & SOTTOMENU STILI
+// ==========================================
+function selectCategory(cat) {
+  AppState.selectedCategory = cat;
+
+  // Aggiorna stile bottoni categorie
+  document.querySelectorAll(".category-btn").forEach(btn => {
+    btn.classList.remove("bg-amber-50", "border-amber-500", "text-amber-950", "shadow-sm");
+    btn.classList.add("bg-white", "border-stone-200", "text-stone-700");
+  });
+
+  const activeBtn = document.getElementById(`cat-btn-${cat}`);
+  if (activeBtn) {
+    activeBtn.classList.remove("bg-white", "border-stone-200", "text-stone-700");
+    activeBtn.classList.add("bg-amber-50", "border-amber-500", "text-amber-950", "shadow-sm");
+  }
+
+  renderStylesSubmenu();
+
+  // Se la ricetta corrente non appartiene a questa categoria, seleziona la prima
+  const currentRecipe = RECIPES_DATA.find(r => r.id === AppState.selectedRecipeId);
+  if (!currentRecipe || currentRecipe.category !== cat) {
+    const firstInCat = RECIPES_DATA.find(r => r.category === cat);
+    if (firstInCat) {
+      selectStyleRecipe(firstInCat.id);
+    }
+  }
+}
+
+function renderStylesSubmenu() {
+  const container = document.getElementById("styles-submenu-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+  const recipesInCat = RECIPES_DATA.filter(r => r.category === AppState.selectedCategory);
+
+  recipesInCat.forEach(recipe => {
+    const isSelected = recipe.id === AppState.selectedRecipeId;
+    const card = document.createElement("button");
+    card.type = "button";
+    card.onclick = () => selectStyleRecipe(recipe.id);
+    card.className = isSelected
+      ? "p-2.5 rounded-xl border text-left transition flex flex-col justify-between bg-amber-100/70 border-amber-500 text-amber-950 shadow-sm ring-1 ring-amber-500 cursor-pointer"
+      : "p-2.5 rounded-xl border text-left transition flex flex-col justify-between bg-stone-50/80 border-stone-200 text-stone-700 hover:bg-stone-100 cursor-pointer";
+
+    card.innerHTML = `
+      <div class="flex items-center justify-between w-full">
+        <span class="font-bold text-xs text-stone-900">${recipe.name}</span>
+        <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded ${isSelected ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-600'}">${recipe.difficulty}</span>
+      </div>
+      <p class="text-[10px] text-stone-500 mt-1 leading-snug line-clamp-2">${recipe.tagline}</p>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function selectStyleRecipe(recipeId) {
+  AppState.selectedRecipeId = recipeId;
+  const recipe = RECIPES_DATA.find(r => r.id === recipeId) || RECIPES_DATA[0];
+
+  // Aggiorna badge titolo
+  const titleBadge = document.getElementById("current-recipe-badge");
+  if (titleBadge) {
+    titleBadge.textContent = recipe.name;
+  }
+
+  // Ridisegna sottomenu per mostrare stato attivo
+  renderStylesSubmenu();
+
+  applyRecipeDefaults(recipeId);
+  updateCalculator();
+
+  // Sincronizza selettore nella Scuola
+  const academySelect = document.getElementById("academy-recipe-changer");
+  if (academySelect) {
+    academySelect.value = recipeId;
+  }
+  loadAcademyRecipe(recipeId);
+}
+
+// ==========================================
+// SELETTORE METODO (DIRETTO, BIGA, POOLISH)
+// ==========================================
+function setDoughMethod(methodId) {
+  AppState.selectedMethod = methodId;
+
+  // Aggiorna stile bottoni metodi
+  document.querySelectorAll(".method-btn").forEach(btn => {
+    btn.classList.remove("bg-amber-50", "border-amber-500", "text-amber-900", "shadow-sm");
+    btn.classList.add("bg-white", "border-stone-200", "text-stone-700");
+  });
+
+  const activeBtn = document.getElementById(`method-btn-${methodId}`);
+  if (activeBtn) {
+    activeBtn.classList.remove("bg-white", "border-stone-200", "text-stone-700");
+    activeBtn.classList.add("bg-amber-50", "border-amber-500", "text-amber-900", "shadow-sm");
+  }
+
+  const methodData = (typeof DOUGH_METHODS !== "undefined" ? DOUGH_METHODS[methodId] : null);
+  const badgeEl = document.getElementById("method-difficulty-badge");
+  const titleEl = document.getElementById("method-explanation-title");
+  const textEl = document.getElementById("method-explanation-text");
+  const prefermentRow = document.getElementById("preferment-percentage-row");
+
+  if (methodData) {
+    if (badgeEl) badgeEl.textContent = methodData.badge;
+    if (titleEl) titleEl.textContent = `Cosa ottieni con ${methodData.name}:`;
+    if (textEl) textEl.textContent = `${methodData.whatYouGet} ${methodData.proTip}`;
+
+    // Imposta default %
+    if (methodId === "biga") {
+      AppState.prefermentPct = 50;
+      if (prefermentRow) {
+        prefermentRow.classList.remove("hidden");
+        document.getElementById("input-preferment-pct").value = 50;
+        document.getElementById("display-preferment-pct").textContent = "50%";
+        document.getElementById("label-preferment-pct-title").textContent = "% Farina nella Biga";
+      }
+    } else if (methodId === "poolish") {
+      AppState.prefermentPct = 30;
+      if (prefermentRow) {
+        prefermentRow.classList.remove("hidden");
+        document.getElementById("input-preferment-pct").value = 30;
+        document.getElementById("display-preferment-pct").textContent = "30%";
+        document.getElementById("label-preferment-pct-title").textContent = "% Farina nel Poolish";
+      }
+    } else {
+      if (prefermentRow) prefermentRow.classList.add("hidden");
+    }
+  }
+
+  updateCalculator();
+  loadAcademyRecipe(AppState.selectedRecipeId);
+  if (window.lucide) lucide.createIcons();
+}
+
+function onPrefermentPctChange(val) {
+  AppState.prefermentPct = parseInt(val) || 50;
+  const display = document.getElementById("display-preferment-pct");
+  if (display) display.textContent = `${AppState.prefermentPct}%`;
+  updateCalculator();
+}
+
+// ==========================================
+// REGOLA DEI 55 / CALCOLO TEMPERATURA ACQUA
+// ==========================================
+function updateWaterTempCalc() {
+  const roomTemp = parseInt(document.getElementById("input-room-temp").value) || 21;
+  const flourTemp = parseInt(document.getElementById("pro-flour-temp")?.value) || 20;
+  const kneadingType = document.getElementById("pro-kneading-type")?.value || "hand";
+
+  const result = DoughCalculator.calculateWaterTemp({
+    roomTemp,
+    flourTemp,
+    targetDoughTemp: 24,
+    kneadingType
+  });
+
+  const resEl = document.getElementById("pro-water-temp-res");
+  const adviceEl = document.getElementById("pro-water-temp-advice");
+  if (resEl) resEl.textContent = `${result.waterTemp}°C`;
+  if (adviceEl) adviceEl.textContent = result.advice;
+}
+
+function syncFromSlider(type, val) {
+  const num = parseFloat(val);
+  if (type === 'panetti') {
+    const slider = document.getElementById("input-num-panetti");
+    if (slider) slider.value = num;
+    const input = document.getElementById("input-num-panetti-val");
+    if (input) input.value = num;
+  } else if (type === 'weight') {
+    const slider = document.getElementById("input-weight-panetto");
+    if (slider) slider.value = num;
+    const input = document.getElementById("input-weight-panetto-val");
+    if (input) input.value = num;
+  } else if (type === 'hydration') {
+    const slider = document.getElementById("input-hydration");
+    if (slider) slider.value = num;
+    const input = document.getElementById("input-hydration-val");
+    if (input) input.value = num;
+  }
+  updateCalculator();
+}
+
+function syncFromInput(type, val) {
+  let num = parseFloat(val);
+  if (isNaN(num)) return;
+  if (type === 'panetti') {
+    const slider = document.getElementById("input-num-panetti");
+    if (slider) slider.value = num;
+    const input = document.getElementById("input-num-panetti-val");
+    if (input) input.value = num;
+  } else if (type === 'weight') {
+    const slider = document.getElementById("input-weight-panetto");
+    if (slider) slider.value = num;
+    const input = document.getElementById("input-weight-panetto-val");
+    if (input) input.value = num;
+  } else if (type === 'hydration') {
+    const slider = document.getElementById("input-hydration");
+    if (slider) slider.value = num;
+    const input = document.getElementById("input-hydration-val");
+    if (input) input.value = num;
+  }
+  updateCalculator();
+}
+
+function applyRecipeDefaults(recipeId) {
+  const recipe = RECIPES_DATA.find(r => r.id === recipeId) || RECIPES_DATA[0];
+
+  const numEl = document.getElementById("input-num-panetti");
+  const numValEl = document.getElementById("input-num-panetti-val");
+  if (numEl) numEl.value = recipe.defaultPieces;
+  if (numValEl) numValEl.value = recipe.defaultPieces;
+
+  const weightEl = document.getElementById("input-weight-panetto");
+  const weightValEl = document.getElementById("input-weight-panetto-val");
+  if (weightEl) weightEl.value = recipe.defaultDoughWeight;
+  if (weightValEl) weightValEl.value = recipe.defaultDoughWeight;
+
+  const hydroEl = document.getElementById("input-hydration");
+  const hydroValEl = document.getElementById("input-hydration-val");
+  if (hydroEl) hydroEl.value = recipe.defaultHydration;
+  if (hydroValEl) hydroValEl.value = recipe.defaultHydration;
+
+  document.getElementById("input-salt-pct").value = recipe.defaultSalt;
+  document.getElementById("input-oil-pct").value = recipe.defaultOil;
+  document.getElementById("input-room-temp").value = recipe.defaultRoomTemp;
+  document.getElementById("input-room-hours").value = recipe.defaultTotalHours - recipe.defaultFridgeHours;
+  document.getElementById("input-fridge-hours").value = recipe.defaultFridgeHours;
+}
+
+function setYeastType(type) {
+  AppState.selectedYeastType = type;
+
+  // Aggiorna stile bottoni
+  document.querySelectorAll(".yeast-tab-btn").forEach(btn => {
+    btn.classList.remove("bg-amber-50", "border-amber-500", "text-amber-900", "shadow-sm");
+    btn.classList.add("bg-white", "border-stone-200", "text-stone-700");
+  });
+
+  const activeBtn = document.getElementById(`yeast-btn-${type}`);
+  if (activeBtn) {
+    activeBtn.classList.remove("bg-white", "border-stone-200", "text-stone-700");
+    activeBtn.classList.add("bg-amber-50", "border-amber-500", "text-amber-900", "shadow-sm");
+  }
+
+  updateCalculator();
+}
+
+function toggleAdvancedParams() {
+  AppState.showAdvanced = !AppState.showAdvanced;
+  const panel = document.getElementById("advanced-params-panel");
+  const text = document.getElementById("advanced-toggle-text");
+  
+  if (panel) {
+    panel.classList.toggle("hidden", !AppState.showAdvanced);
+  }
+  if (text) {
+    text.textContent = AppState.showAdvanced
+      ? "Nascondi opzioni avanzate"
+      : "Mostra opzioni avanzate (Sale %, Olio %, Malto %)";
+  }
+}
+
+function updateCalculator() {
+  const recipe = RECIPES_DATA.find(r => r.id === AppState.selectedRecipeId) || RECIPES_DATA[0];
+
+  // Lettura valori input (da input numerico o slider)
+  const numPanetti = parseInt(document.getElementById("input-num-panetti-val")?.value || document.getElementById("input-num-panetti")?.value) || 1;
+  const weightPanetto = parseInt(document.getElementById("input-weight-panetto-val")?.value || document.getElementById("input-weight-panetto")?.value) || 260;
+  const hydration = parseInt(document.getElementById("input-hydration-val")?.value || document.getElementById("input-hydration")?.value) || 65;
+  const saltPct = parseFloat(document.getElementById("input-salt-pct").value) || 2.5;
+  const oilPct = parseFloat(document.getElementById("input-oil-pct").value) || 0;
+  const sugarPct = parseFloat(document.getElementById("input-sugar-pct").value) || 0;
+  const roomTemp = parseInt(document.getElementById("input-room-temp").value) || 21;
+  const roomHours = parseInt(document.getElementById("input-room-hours").value) || 8;
+  const fridgeHours = parseInt(document.getElementById("input-fridge-hours").value) || 0;
+
+  // Aggiornamento labels reattive e sync input diretti
+  const lblPanetti = document.getElementById("label-num-panetti");
+  if (lblPanetti) lblPanetti.textContent = numPanetti;
+  const lblWeight = document.getElementById("label-weight-panetto");
+  if (lblWeight) lblWeight.textContent = `${weightPanetto}g`;
+  const lblHydro = document.getElementById("label-hydration");
+  if (lblHydro) lblHydro.textContent = `${hydration}%`;
+
+  const lblRoomTemp = document.getElementById("label-room-temp");
+  if (lblRoomTemp) lblRoomTemp.textContent = `${roomTemp}°C`;
+  const lblRoomHours = document.getElementById("label-room-hours");
+  if (lblRoomHours) lblRoomHours.textContent = `${roomHours} ore`;
+  const lblFridgeHours = document.getElementById("label-fridge-hours");
+  if (lblFridgeHours) lblFridgeHours.textContent = `${fridgeHours} ore`;
+
+  const numValEl = document.getElementById("input-num-panetti-val");
+  if (numValEl && document.activeElement !== numValEl) numValEl.value = numPanetti;
+  const weightValEl = document.getElementById("input-weight-panetto-val");
+  if (weightValEl && document.activeElement !== weightValEl) weightValEl.value = weightPanetto;
+  const hydroValEl = document.getElementById("input-hydration-val");
+  if (hydroValEl && document.activeElement !== hydroValEl) hydroValEl.value = hydration;
+
+  // Badge difficoltà idratazione
+  const badgeDiff = document.getElementById("badge-difficolta-idro");
+  if (badgeDiff) {
+    if (hydration < 65) {
+      badgeDiff.textContent = "Facile da stendere";
+      badgeDiff.className = "text-[11px] px-2 py-0.5 rounded-full font-bold bg-green-100 text-green-800";
+    } else if (hydration <= 72) {
+      badgeDiff.textContent = "Media complessità";
+      badgeDiff.className = "text-[11px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800";
+    } else {
+      badgeDiff.textContent = "Alta idratazione (richiede pieghe)";
+      badgeDiff.className = "text-[11px] px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-800";
+    }
+  }
+
+  // Calcolo totale peso target
+  const targetTotalWeight = numPanetti * weightPanetto;
+
+  // Esecuzione calcolo matematico
+  const calcResult = DoughCalculator.calculate({
+    targetTotalWeight,
+    hydration,
+    salt: saltPct,
+    oil: oilPct,
+    sugar: sugarPct,
+    roomHours,
+    fridgeHours,
+    tempC: roomTemp,
+    yeastType: AppState.selectedYeastType
+  });
+
+  // Renderizzazione risultati principali
+  document.getElementById("res-total-weight").textContent = `${calcResult.actualTotalWeight} g`;
+  document.getElementById("res-flour").textContent = `${calcResult.flour} g`;
+  document.getElementById("res-water").textContent = `${calcResult.water} g`;
+  document.getElementById("res-hydration-label").textContent = `${calcResult.hydration}`;
+  document.getElementById("res-salt").textContent = `${calcResult.salt} g`;
+
+  // Lievito con etichetta
+  const yeastLabels = {
+    fresh: "Fresco",
+    dry: "Secco",
+    solid: "Madre Solida",
+    licoli: "Licoli"
+  };
+  document.getElementById("res-yeast-type-label").textContent = yeastLabels[calcResult.yeastType] || "Fresco";
+  document.getElementById("res-yeast").textContent = `${calcResult.yeast} g`;
+
+  // Olio e Zucchero opzionali
+  const oilRow = document.getElementById("res-oil-row");
+  if (oilRow) {
+    oilRow.classList.toggle("hidden", calcResult.oil <= 0);
+    document.getElementById("res-oil").textContent = `${calcResult.oil} g`;
+  }
+
+  const sugarRow = document.getElementById("res-sugar-row");
+  if (sugarRow) {
+    sugarRow.classList.toggle("hidden", calcResult.sugar <= 0);
+    document.getElementById("res-sugar").textContent = `${calcResult.sugar} g`;
+  }
+
+  // Nota su lievito madre
+  const noteBox = document.getElementById("sourdough-note-box");
+  const noteText = document.getElementById("sourdough-note-text");
+  if (noteBox && noteText) {
+    if (calcResult.sourdoughAdvice) {
+      noteBox.classList.remove("hidden");
+      noteText.textContent = calcResult.sourdoughAdvice;
+    } else {
+      noteBox.classList.add("hidden");
+    }
+  }
+
+  // Aggiornamento consigli farina
+  if (recipe && recipe.flourRecommendation) {
+    document.getElementById("flour-rec-type").textContent = recipe.flourRecommendation.type;
+    document.getElementById("flour-rec-w").textContent = recipe.flourRecommendation.w;
+    document.getElementById("flour-rec-prot").textContent = recipe.flourRecommendation.protein;
+    document.getElementById("flour-rec-notes").textContent = recipe.flourRecommendation.notes;
+  }
+
+  // Scomposizione Pre-fermento (Biga o Poolish)
+  const prefermentResult = DoughCalculator.calculatePreferment(calcResult, AppState.selectedMethod, AppState.prefermentPct);
+  const breakdownCard = document.getElementById("preferment-breakdown-card");
+
+  if (prefermentResult && breakdownCard) {
+    breakdownCard.classList.remove("hidden");
+    const breakdownTitle = document.getElementById("breakdown-title");
+    const prepName = document.getElementById("breakdown-prep-name");
+    const prepTemp = document.getElementById("breakdown-prep-temp");
+    
+    if (breakdownTitle) breakdownTitle.textContent = `Scomposizione con ${prefermentResult.preferment.name} (${AppState.prefermentPct}%)`;
+    if (prepName) prepName.textContent = prefermentResult.method === "biga" ? "Biga (45% idro)" : "Poolish (100% idro)";
+    if (prepTemp) prepTemp.textContent = prefermentResult.method === "biga" ? "16-18°C (16-24h)" : "20-22°C (8-16h)";
+
+    // Fase 1
+    const prefFlour = document.getElementById("breakdown-pref-flour");
+    const prefWater = document.getElementById("breakdown-pref-water");
+    const prefHydro = document.getElementById("breakdown-pref-hydro");
+    const prefYeast = document.getElementById("breakdown-pref-yeast");
+    const prefNote = document.getElementById("breakdown-pref-note");
+
+    if (prefFlour) prefFlour.textContent = `${prefermentResult.preferment.flour} g`;
+    if (prefWater) prefWater.textContent = `${prefermentResult.preferment.water} g`;
+    if (prefHydro) prefHydro.textContent = `${prefermentResult.preferment.hydration}`;
+    if (prefYeast) prefYeast.textContent = `${prefermentResult.preferment.yeast} g`;
+    if (prefNote) prefNote.textContent = `${prefermentResult.preferment.tempAdvice} ${prefermentResult.preferment.prepNote}`;
+
+    // Fase 2
+    const refFlour = document.getElementById("breakdown-ref-flour");
+    const refWater = document.getElementById("breakdown-ref-water");
+    const refSalt = document.getElementById("breakdown-ref-salt");
+    const refOil = document.getElementById("breakdown-ref-oil");
+    const refNote = document.getElementById("breakdown-ref-note");
+
+    if (refFlour) refFlour.textContent = `${prefermentResult.refresh.flour} g`;
+    if (refWater) refWater.textContent = `${prefermentResult.refresh.water} g`;
+    if (refSalt) refSalt.textContent = `${prefermentResult.refresh.salt} g`;
+    if (refOil) refOil.textContent = `${prefermentResult.refresh.oil} g`;
+    if (refNote) refNote.textContent = prefermentResult.refresh.prepNote;
+  } else if (breakdownCard) {
+    breakdownCard.classList.add("hidden");
+  }
+
+  // Se in Pro Mode, calcola la temperatura dell'acqua
+  if (AppState.experienceMode === "pro") {
+    updateWaterTempCalc();
+  }
+
+  // Aggiornamento Consulente Forno
+  updateOvenAdvisor();
+
+  if (window.MaestroAgent) {
+    MaestroAgent.updateContextPill();
+  }
+}
+
+// ==========================================
+// GESTIONE SELEZIONE FORNO & CONSULENTE
+// ==========================================
+function setOvenType(ovenId) {
+  AppState.selectedOvenId = ovenId;
+
+  // Aggiorna stile bottoni forno
+  document.querySelectorAll(".oven-tab-btn").forEach(btn => {
+    btn.classList.remove("bg-amber-50", "border-amber-500", "text-amber-900", "shadow-sm");
+    btn.classList.add("bg-white", "border-stone-200", "text-stone-700");
+  });
+
+  const activeBtn = document.getElementById(`oven-btn-${ovenId}`);
+  if (activeBtn) {
+    activeBtn.classList.remove("bg-white", "border-stone-200", "text-stone-700");
+    activeBtn.classList.add("bg-amber-50", "border-amber-500", "text-amber-900", "shadow-sm");
+  }
+
+  const oven = (typeof OVENS_DATA !== "undefined" ? OVENS_DATA : []).find(o => o.id === ovenId);
+  const tempLabel = document.getElementById("label-selected-oven-temp");
+  if (tempLabel && oven) {
+    tempLabel.textContent = `Max ${oven.maxTemp}`;
+  }
+
+  updateOvenAdvisor();
+  loadAcademyRecipe(AppState.selectedRecipeId);
+}
+
+function updateOvenAdvisor() {
+  const oven = (typeof OVENS_DATA !== "undefined" ? OVENS_DATA : []).find(o => o.id === AppState.selectedOvenId) || (typeof OVENS_DATA !== "undefined" ? OVENS_DATA[0] : null);
+  if (!oven) return;
+
+  const card = document.getElementById("oven-advisor-card");
+  const nameEl = document.getElementById("oven-advisor-name");
+  const tempEl = document.getElementById("oven-advisor-temp");
+  const badgeEl = document.getElementById("oven-advisor-badge");
+  const warningBox = document.getElementById("oven-warning-box");
+  const warningTitle = document.getElementById("oven-warning-title");
+  const warningMsg = document.getElementById("oven-warning-msg");
+  const suggestionBox = document.getElementById("oven-suggestion-box");
+  const suggestionText = document.getElementById("oven-suggestion-text");
+  const switchLabel = document.getElementById("btn-switch-suggested-label");
+  const adaptBox = document.getElementById("oven-adapt-box");
+  const tipsBox = document.getElementById("oven-tips-box");
+  const tipsText = document.getElementById("oven-tips-text");
+
+  if (nameEl) nameEl.textContent = oven.name;
+  if (tempEl) tempEl.textContent = `${oven.tagline}`;
+
+  const recipeAdvice = oven.recipesAdvice ? oven.recipesAdvice[AppState.selectedRecipeId] : null;
+
+  if (!recipeAdvice) {
+    if (warningBox) warningBox.classList.add("hidden");
+    if (badgeEl) {
+      badgeEl.textContent = "Compatibile";
+      badgeEl.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-800";
+    }
+    if (tipsText) tipsText.textContent = oven.adviceGeneral || "Preriscalda bene prima di infornare.";
+    return;
+  }
+
+  // Livello di allerta
+  if (recipeAdvice.warningLevel === "high") {
+    // Incompatibilità critica (es. Napoletana + Forno di Casa)
+    if (card) {
+      card.className = "rounded-2xl p-5 shadow-sm border transition-all space-y-3.5 bg-amber-50/50 border-amber-400";
+    }
+    if (badgeEl) {
+      badgeEl.textContent = "❌ Troppo Freddo / Sconsigliato";
+      badgeEl.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300";
+    }
+    if (warningBox) {
+      warningBox.classList.remove("hidden");
+      warningBox.className = "p-3.5 rounded-xl border space-y-2.5 bg-amber-100/70 border-amber-300 text-amber-950";
+    }
+    if (warningTitle) warningTitle.textContent = recipeAdvice.warningTitle;
+    if (warningMsg) warningMsg.textContent = recipeAdvice.warningMessage;
+
+    // Suggerimento ricetta alternativa
+    if (recipeAdvice.suggestedRecipeId) {
+      AppState.suggestedRecipeId = recipeAdvice.suggestedRecipeId;
+      if (suggestionBox) suggestionBox.classList.remove("hidden");
+      if (suggestionText) suggestionText.textContent = recipeAdvice.suggestionText;
+      if (switchLabel) switchLabel.textContent = `Passa a ${recipeAdvice.suggestedRecipeName}`;
+    } else {
+      if (suggestionBox) suggestionBox.classList.add("hidden");
+    }
+
+    // Tasto adattamento ingredienti per forno di casa
+    if (AppState.selectedRecipeId === "pizza_napoletana" && oven.id === "home_standard") {
+      if (adaptBox) adaptBox.classList.remove("hidden");
+    } else {
+      if (adaptBox) adaptBox.classList.add("hidden");
+    }
+
+    if (tipsText) {
+      tipsText.innerHTML = recipeAdvice.homeOvenHacks
+        ? `<strong class="text-stone-800 block mb-1">Hacks per cuocere la tonda a 250°C:</strong>` + recipeAdvice.homeOvenHacks.map(h => `• ${h}`).join("<br>")
+        : (recipeAdvice.tips || oven.adviceGeneral);
+    }
+
+  } else if (recipeAdvice.warningLevel === "medium" || recipeAdvice.warningLevel === "info") {
+    if (card) {
+      card.className = "rounded-2xl p-5 shadow-sm border transition-all space-y-3.5 bg-amber-50/20 border-amber-200";
+    }
+    if (badgeEl) {
+      badgeEl.textContent = "⚠️ Con Accortezze";
+      badgeEl.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300";
+    }
+    if (warningBox) {
+      warningBox.classList.remove("hidden");
+      warningBox.className = "p-3.5 rounded-xl border space-y-2 bg-amber-100/50 border-amber-200 text-amber-900";
+    }
+    if (warningTitle) warningTitle.textContent = recipeAdvice.warningTitle;
+    if (warningMsg) warningMsg.textContent = recipeAdvice.warningMessage;
+    if (suggestionBox) suggestionBox.classList.add("hidden");
+    if (adaptBox) adaptBox.classList.add("hidden");
+    if (tipsText) tipsText.textContent = recipeAdvice.tips || oven.adviceGeneral;
+
+  } else {
+    // Perfetto
+    if (card) {
+      card.className = "rounded-2xl p-5 shadow-sm border transition-all space-y-3.5 bg-green-50/20 border-green-300";
+    }
+    if (badgeEl) {
+      badgeEl.textContent = "✅ Abbinamento Perfetto";
+      badgeEl.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-300";
+    }
+    if (warningBox) warningBox.classList.add("hidden");
+    if (suggestionBox) suggestionBox.classList.add("hidden");
+    if (adaptBox) adaptBox.classList.add("hidden");
+    if (tipsText) tipsText.textContent = recipeAdvice.tips || oven.adviceGeneral;
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function applySuggestedRecipe() {
+  if (AppState.suggestedRecipeId) {
+    onRecipeChange(AppState.suggestedRecipeId);
+  }
+}
+
+function adaptRecipeForHomeOven() {
+  document.getElementById("input-oil-pct").value = "2.5";
+  document.getElementById("input-sugar-pct").value = "1.0";
+  
+  if (!AppState.showAdvanced) {
+    toggleAdvancedParams();
+  }
+  
+  updateCalculator();
+  alert("Ingredienti aggiornati per Forno di Casa!\nAggiunto il 2.5% di Olio EVO e l'1% di Malto/Miele per non far disidratare l'impasto a 250°C e favorire la doratura.");
+}
+
+// ==========================================
+// SCUOLA PASSO-PASSO (ACADEMY)
+// ==========================================
+function startAcademyWithCurrentRecipe() {
+  switchTab("academy");
+  loadAcademyRecipe(AppState.selectedRecipeId);
+}
+
+function loadAcademyRecipe(recipeId) {
+  const recipe = RECIPES_DATA.find(r => r.id === recipeId) || RECIPES_DATA[0];
+  AppState.selectedRecipeId = recipeId;
+
+  document.getElementById("academy-recipe-title").textContent = `${recipe.name} (${AppState.selectedMethod === 'biga' ? 'Metodo con Biga' : (AppState.selectedMethod === 'poolish' ? 'Metodo con Poolish' : 'Metodo Diretto')})`;
+  document.getElementById("academy-recipe-tagline").textContent = recipe.tagline;
+
+  const container = document.getElementById("academy-steps-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  // Costruzione della lista dei passi in base al metodo di impasto
+  let stepsToRender = [];
+
+  if (AppState.selectedMethod === "biga") {
+    // Fase 1: Biga
+    stepsToRender.push({
+      step: 1,
+      title: "1. Preparazione della Biga (16-24 ore prima)",
+      durationMinutes: 15,
+      hasTimer: false,
+      instruction: `Pesa la farina della biga (${AppState.prefermentPct}% del totale), l'acqua fredda (45% sulla farina) e il lievito. Mescola energicamente in una ciotola solo per 2-3 minuti finché non c'è più farina asciutta visibile. NON impastare e non creare maglia glutinica: la biga deve restare sgranata, grezza e a pezzetti. Metti in un contenitore capiente, copri con telo umido o coperchio forato e lascia fermentare a 16-18°C per 16-24 ore.`,
+      whyItWorks: "Durante le 18 ore di fermentazione lenta, la proteolisi controllata e la produzione di acidi organici renderanno l'impasto finale incredibilmente estensibile e daranno un cornicione alveolato e croccante con profumi intensi."
+    });
+
+    // Fase 2: Chiusura
+    stepsToRender.push({
+      step: 2,
+      title: "2. Chiusura e Rinfresco dell'Impasto",
+      durationMinutes: 20,
+      hasTimer: false,
+      instruction: `Taglia o spezzetta la biga maturata a pezzi nella ciotola. Unisci la farina del rinfresco e circa il 70% dell'acqua rimasta (fredda). Lavora a velocità bassa per sciogliere i pezzetti di biga. Appena si forma una struttura elastica, unisci il sale e la restante acqua a filo poco alla volta. Infine unisci l'olio se previsto.`,
+      whyItWorks: "Aggiungere l'acqua fredda gradualmente permette alla biga di incorporarsi senza 'annegare' il glutine."
+    });
+
+    // Aggiungi gli step successivi della ricetta (Puntata/Riposo, Staglio, Appretto, Stesura, Cottura)
+    const subsequentSteps = recipe.steps.filter(s => s.step >= 3);
+    subsequentSteps.forEach((s, idx) => {
+      stepsToRender.push({
+        ...s,
+        step: idx + 3
+      });
+    });
+
+  } else if (AppState.selectedMethod === "poolish") {
+    // Fase 1: Poolish
+    stepsToRender.push({
+      step: 1,
+      title: "1. Preparazione del Poolish (8-14 ore prima)",
+      durationMinutes: 10,
+      hasTimer: false,
+      instruction: `Unisci in parti uguali farina e acqua con il lievito in una caraffa o barattolo alto. Mescola vigorosamente con una forchetta fino a formare una crema priva di grumi. Segna il livello iniziale con un elastico. Copri e lascia riposare a 20-22°C per 8-12 ore. Sarà pronto quando la superficie è colma di bolle fitte e il centro accenna appena a cedere.`,
+      whyItWorks: "L'ambiente liquido favorisce la moltiplicazione rapida dei lieviti e la produzione di enzimi che donano alla pizza una scioglievolezza assoluta al morso."
+    });
+
+    // Fase 2: Chiusura
+    stepsToRender.push({
+      step: 2,
+      title: "2. Chiusura dell'Impasto con Poolish",
+      durationMinutes: 15,
+      hasTimer: false,
+      instruction: `Versa il poolish attivo nella ciotola, aggiungi l'acqua rimasta e tutta la farina del rinfresco. Inizia a impastare. Appena la massa prende corpo, aggiungi il sale e lavora fino a incordatura perfetta. Unisci l'olio per ultimo se previsto.`,
+      whyItWorks: "Il poolish agisce come un inoculo enzimatico potente che riduce notevolmente i tempi di incordatura finale."
+    });
+
+    const subsequentSteps = recipe.steps.filter(s => s.step >= 3);
+    subsequentSteps.forEach((s, idx) => {
+      stepsToRender.push({
+        ...s,
+        step: idx + 3
+      });
+    });
+
+  } else {
+    // Metodo Diretto Standard
+    stepsToRender = [...recipe.steps];
+  }
+
+  stepsToRender.forEach((step, idx) => {
+    let stepTitle = step.title;
+    let stepInstruction = step.instruction;
+    let stepDuration = step.durationMinutes;
+    let stepWhy = step.whyItWorks;
+    let hasTimer = step.hasTimer;
+
+    // Se è il passaggio di cottura, personalizzalo dinamicamente con il forno selezionato
+    const isBakingStep = (step.step === recipe.steps.length) || step.title.toLowerCase().includes("cottura");
+    if (isBakingStep) {
+      const oven = (typeof OVENS_DATA !== "undefined" ? OVENS_DATA : []).find(o => o.id === AppState.selectedOvenId);
+      if (oven) {
+        stepTitle = `Cottura con ${oven.name} (${oven.maxTemp})`;
+
+        if (oven.id === "home_standard") {
+          if (recipe.id === "pizza_napoletana") {
+            stepInstruction = `⚠️ COTTURA FORNO DI CASA A 250°C (Tecnica Padella + Grill): La classica tonda a 250°C non svilupperà il cornicione in tempo. Procedi così: 1) Preriscalda il forno al massimo (250-275°C) con il grill acceso e la leccarda sul ripiano più alto. 2) Scalda una padella antiaderente o in ghisa sul fornello a gas finché è rovente. 3) Stendi il panetto, adagialo in padella e condisci velocemente. 4) Cuoci per 90-120 secondi sul gas per cuocere e tostare il fondo. 5) Trasferisci immediatamente la padella (o fai scivolare la pizza) sotto il grill del forno per altri 2-3 minuti per dorare il cornicione.`;
+            stepDuration = 5;
+            stepWhy = "Nel forno casalingo la potenza termica è insufficiente; la padella rovente trasferisce calore per conduzione sul fondo mentre il grill fornisce l'irraggiamento dall'alto simulando la fiamma viva.";
+          } else {
+            stepInstruction = `${step.instruction} • Consiglio Forno di Casa: Preriscalda per almeno 40 minuti per stabilizzare la temperatura.`;
+          }
+        } else if (oven.id === "gas_portable") {
+          if (recipe.id === "pizza_napoletana") {
+            stepInstruction = `🔥 COTTURA FORNO A GAS (Ooni / Munaciello): Preriscalda a fiamma massima per 20-25 minuti fino a quando il centro della pietra misura 420-440°C. TRUCCO ESSENZIALE: Appena inforni la pizza, ABBASSA SUBITO LA FIAMMA AL MINIMO! Questo eviterà che il cornicione si bruci prima che il fondo sia cotto. Ruota la pizza di 90° ogni 20 secondi con un palino. Cottura totale: 75-90 secondi.`;
+            stepDuration = 2;
+            stepWhy = "Abbassare la fiamma al minimo riduce l'irraggiamento fiammante e bilancia il tempo di cottura tra la conduzione dal biscotto refrattario e la doratura superiore.";
+          }
+        } else if (oven.id === "electric_pizza") {
+          if (recipe.id === "pizza_napoletana") {
+            stepInstruction = `⚡ COTTURA FORNETTO ELETTRICO (Ferrari / Effeuno): Preriscalda la pietra a 400°C. Inforna quando la resistenza superiore è accesa e rovente. Se hai un fornetto a conchiglia rotondo, ruota la pizza di 180° dopo 60 secondi. Tempo totale: circa 90-120 secondi.`;
+            stepDuration = 2;
+          }
+        } else if (oven.id === "wood_fired") {
+          if (recipe.id === "pizza_napoletana") {
+            stepInstruction = `🪵 COTTURA FORNO A LEGNA: Spazza il piano dalla cenere. Platea a 430°C, fiamma viva e chiara. Inforna con colpo secco di pala. Dopo 40 secondi fai il primo giro. Negli ultimi 5 secondi, alza la pizza verso la volta con la pala per il 'bacio del forno'. Tempo: 60-90 secondi.`;
+            stepDuration = 1;
+          }
+        }
+      }
+    }
+
+    const card = document.createElement("div");
+    card.className = "bg-white rounded-2xl p-6 shadow-sm border border-stone-200 space-y-4 hover:border-amber-300 transition";
+
+    const btnId = `btn-step-timer-${step.step}`;
+    const hasTimerBtn = hasTimer ? `
+      <button id="${btnId}" data-step="${step.step}" data-duration="${stepDuration}" onclick="handleStepTimerClick(${step.step}, ${stepDuration}, '${escapeHtml(stepTitle)}')" class="step-timer-button inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-xl text-xs border border-amber-300/80 transition cursor-pointer shadow-sm">
+        <i data-lucide="play" class="w-3.5 h-3.5 text-amber-600"></i>
+        <span>Avvia Timer (${stepDuration} min)</span>
+      </button>
+    ` : '';
+
+    card.innerHTML = `
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-stone-100 pb-3">
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-amber-600 text-white font-black flex items-center justify-center text-sm shadow-sm">
+            ${step.step}
+          </span>
+          <h3 class="font-bold text-stone-900 text-base sm:text-lg font-serif-display">${stepTitle}</h3>
+        </div>
+        ${hasTimerBtn}
+      </div>
+
+      <p class="text-sm text-stone-700 leading-relaxed font-normal">
+        ${stepInstruction}
+      </p>
+
+      <div class="bg-amber-50/80 border-l-4 border-amber-500 p-3.5 rounded-r-xl text-xs text-amber-950 space-y-1">
+        <div class="font-bold flex items-center gap-1.5 text-amber-900">
+          <i data-lucide="microscope" class="w-4 h-4 text-amber-600"></i>
+          <span>Perché Funziona (La Teoria del Maestro)</span>
+        </div>
+        <p class="text-stone-700 leading-relaxed italic">
+          ${stepWhy}
+        </p>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
+
+// ==========================================
+// GESTIONE TIMER E ALLARME AUDIO
+// ==========================================
+function handleStepTimerClick(stepNumber, minutes, title) {
+  // Se questo step ha già il timer attivo, il clic funge da STOP
+  if (AppState.timer.intervalId && AppState.timer.runningStep === stepNumber) {
+    stopActiveTimer();
+    return;
+  }
+  startStepTimer(stepNumber, minutes, title);
+}
+
+function startStepTimer(stepNumber, minutes, title) {
+  stopActiveTimer();
+
+  const totalSeconds = minutes * 60;
+  AppState.timer.remainingSeconds = totalSeconds;
+  AppState.timer.title = title;
+  AppState.timer.runningStep = stepNumber;
+
+  // Mostra pill in alto
+  const pill = document.getElementById("active-timer-pill");
+  if (pill) {
+    pill.classList.remove("hidden");
+    pill.classList.add("flex");
+  }
+
+  // Mostra barra flottante in basso a destra
+  const floatingBar = document.getElementById("floating-timer-bar");
+  const floatingTitle = document.getElementById("floating-timer-title");
+  if (floatingBar) {
+    floatingBar.classList.remove("hidden");
+    floatingBar.classList.add("flex");
+    if (floatingTitle) floatingTitle.textContent = title;
+  }
+
+  // Aggiorna stile bottone attivo per mostrare "Ferma Timer"
+  const activeBtn = document.getElementById(`btn-step-timer-${stepNumber}`);
+  if (activeBtn) {
+    activeBtn.className = "step-timer-button inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded-xl text-xs border border-red-300 transition animate-pulse cursor-pointer shadow-sm";
+  }
+
+  updateTimerPillDisplay();
+
+  AppState.timer.intervalId = setInterval(() => {
+    AppState.timer.remainingSeconds--;
+    if (AppState.timer.remainingSeconds <= 0) {
+      clearInterval(AppState.timer.intervalId);
+      AppState.timer.intervalId = null;
+      triggerTimerFinished();
+    } else {
+      updateTimerPillDisplay();
+    }
+  }, 1000);
+}
+
+function updateTimerPillDisplay() {
+  const m = Math.floor(AppState.timer.remainingSeconds / 60);
+  const s = AppState.timer.remainingSeconds % 60;
+  const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+  const display = document.getElementById("active-timer-display");
+  if (display) display.textContent = timeStr;
+
+  const floatingDisplay = document.getElementById("floating-timer-display");
+  if (floatingDisplay) floatingDisplay.textContent = timeStr;
+
+  // Aggiorna il testo del bottone del passo attivo
+  if (AppState.timer.runningStep) {
+    const activeBtn = document.getElementById(`btn-step-timer-${AppState.timer.runningStep}`);
+    if (activeBtn) {
+      activeBtn.innerHTML = `<i data-lucide="square" class="w-3.5 h-3.5 fill-current text-red-600"></i> <span>Ferma Timer (${timeStr})</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function triggerTimerFinished() {
+  playTimerBell();
+
+  const modal = document.getElementById("timer-modal");
+  const modalTitle = document.getElementById("timer-modal-title");
+  const modalDesc = document.getElementById("timer-modal-desc");
+  const modalCountdown = document.getElementById("timer-modal-countdown");
+
+  if (modalTitle) modalTitle.textContent = "Fase Completata!";
+  if (modalDesc) modalDesc.textContent = `È terminato il tempo per: ${AppState.timer.title}`;
+  if (modalCountdown) modalCountdown.textContent = "00:00";
+  if (modal) modal.classList.remove("hidden");
+
+  // Nascondi indicatori attivi
+  const pill = document.getElementById("active-timer-pill");
+  if (pill) {
+    pill.classList.add("hidden");
+    pill.classList.remove("flex");
+  }
+  const floatingBar = document.getElementById("floating-timer-bar");
+  if (floatingBar) {
+    floatingBar.classList.add("hidden");
+    floatingBar.classList.remove("flex");
+  }
+
+  resetAllStepButtons();
+}
+
+function stopActiveTimer() {
+  if (AppState.timer.intervalId) {
+    clearInterval(AppState.timer.intervalId);
+    AppState.timer.intervalId = null;
+  }
+  AppState.timer.remainingSeconds = 0;
+  AppState.timer.runningStep = null;
+  AppState.timer.title = "";
+
+  const modal = document.getElementById("timer-modal");
+  if (modal) modal.classList.add("hidden");
+
+  const pill = document.getElementById("active-timer-pill");
+  if (pill) {
+    pill.classList.add("hidden");
+    pill.classList.remove("flex");
+  }
+
+  const floatingBar = document.getElementById("floating-timer-bar");
+  if (floatingBar) {
+    floatingBar.classList.add("hidden");
+    floatingBar.classList.remove("flex");
+  }
+
+  resetAllStepButtons();
+}
+
+function resetAllStepButtons() {
+  document.querySelectorAll(".step-timer-button").forEach(btn => {
+    const duration = btn.getAttribute("data-duration") || "5";
+    btn.className = "step-timer-button inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-xl text-xs border border-amber-300/80 transition cursor-pointer shadow-sm";
+    btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 text-amber-600"></i> <span>Avvia Timer (${duration} min)</span>`;
+  });
+  if (window.lucide) lucide.createIcons();
+}
+
+// Suono campanella tramite Web Audio API (senza file audio esterni)
+function playTimerBell() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    // Triplo tocco di campana armonico
+    [0, 0.4, 0.8].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime + delay); // Nota La5
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + delay + 0.8);
+
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.9);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 1.0);
+    });
+  } catch (e) {
+    console.log("Audio non riproducibile:", e);
+  }
+}
+
+// ==========================================
+// PRONTO SOCCORSO (TROUBLESHOOTING)
+// ==========================================
+function initTroubleshooter() {
+  renderTroubleshooter("");
+}
+
+function filterTroubleshooter(query) {
+  renderTroubleshooter(query.toLowerCase());
+}
+
+function renderTroubleshooter(query) {
+  const container = document.getElementById("troubleshooter-list");
+  if (!container) return;
+
+  const filtered = TROUBLESHOOTER_DATA.filter(item => {
+    if (!query) return true;
+    return item.problem.toLowerCase().includes(query) ||
+           item.symptom.toLowerCase().includes(query) ||
+           item.quickFix.toLowerCase().includes(query) ||
+           item.category.toLowerCase().includes(query);
+  });
+
+  container.innerHTML = "";
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-2 text-center py-10 text-stone-500">
+        <i data-lucide="help-circle" class="w-8 h-8 mx-auto mb-2 text-stone-400"></i>
+        Nessun problema trovato con questo termine. Prova parole come 'appiccicoso', 'elastico', 'lievita'.
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  filtered.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "bg-white rounded-2xl p-5 shadow-sm border border-stone-200 space-y-3.5 flex flex-col justify-between";
+
+    card.innerHTML = `
+      <div>
+        <div class="flex items-center justify-between gap-2 mb-1.5">
+          <span class="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md uppercase">
+            ${item.category}
+          </span>
+          <span class="text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+            ${item.severity}
+          </span>
+        </div>
+
+        <h3 class="font-bold text-stone-900 text-base font-serif-display flex items-start gap-2">
+          <i data-lucide="${item.icon || 'alert-circle'}" class="w-4 h-4 text-amber-600 mt-1 flex-shrink-0"></i>
+          <span>${item.problem}</span>
+        </h3>
+
+        <p class="text-xs text-stone-600 mt-2 italic bg-stone-50 p-2 rounded-lg border border-stone-100">
+          "${item.symptom}"
+        </p>
+
+        <div class="mt-3 text-xs space-y-2">
+          <div>
+            <strong class="text-stone-800">Causa Scientifica:</strong>
+            <span class="text-stone-600 leading-relaxed"> ${item.scientificCause}</span>
+          </div>
+          <div class="bg-green-50/80 border-l-4 border-green-500 p-2.5 rounded-r-lg text-green-950 font-medium">
+            <strong class="text-green-900 flex items-center gap-1"><i data-lucide="zap" class="w-3.5 h-3.5 text-green-600"></i> Come salvarlo subito:</strong>
+            ${item.quickFix}
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-stone-100 text-[11px] text-stone-500">
+        <strong class="text-stone-700">Per la prossima volta:</strong> ${item.prevention}
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  if (window.lucide) lucide.createIcons();
+}
+
+// ==========================================
+// DIARIO DEGLI IMPASTI
+// ==========================================
+function initJournal() {
+  renderJournal();
+}
+
+function renderJournal() {
+  const container = document.getElementById("journal-entries-container");
+  if (!container) return;
+
+  const entries = DoughStorage.getJournal();
+  container.innerHTML = "";
+
+  if (entries.length === 0) {
+    container.innerHTML = `
+      <div class="bg-white rounded-2xl p-8 text-center text-stone-500 border border-stone-200">
+        <i data-lucide="book" class="w-10 h-10 mx-auto mb-2 text-stone-400"></i>
+        <p class="text-sm font-semibold">Nessun impasto salvato nel diario.</p>
+        <p class="text-xs text-stone-400 mt-1">Usa il calcolatore e salva i tuoi esperimenti per ricordare ricette e tempi.</p>
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  entries.forEach(entry => {
+    const stars = "⭐".repeat(entry.rating || 5);
+    const card = document.createElement("div");
+    card.className = "bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3";
+
+    card.innerHTML = `
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <h4 class="font-bold text-stone-900 text-base">${entry.recipeName}</h4>
+          <span class="text-xs text-amber-500">${stars}</span>
+          <span class="text-[11px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full font-semibold">Idro ${entry.hydration}%</span>
+        </div>
+        <p class="text-xs text-stone-600 max-w-2xl">${entry.notes || 'Nessuna nota aggiuntiva.'}</p>
+        <div class="text-[11px] text-stone-400">Data infornata: ${entry.date}</div>
+      </div>
+      <button onclick="deleteJournalItem('${entry.id}')" title="Elimina voce" class="p-2 text-stone-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+      </button>
+    `;
+
+    container.appendChild(card);
+  });
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function openNewJournalModal() {
+  document.getElementById("modal-journal-title").value = "Esperimento Pizza";
+  document.getElementById("modal-journal-hydro").value = "65";
+  document.getElementById("modal-journal-notes").value = "";
+  document.getElementById("journal-modal").classList.remove("hidden");
+}
+
+function saveCurrentToJournalModal() {
+  const recipe = RECIPES_DATA.find(r => r.id === AppState.selectedRecipeId) || RECIPES_DATA[0];
+  const hydro = document.getElementById("input-hydration").value;
+
+  document.getElementById("modal-journal-title").value = `${recipe.name}`;
+  document.getElementById("modal-journal-hydro").value = hydro;
+  document.getElementById("modal-journal-notes").value = `Farina: ${recipe.flourRecommendation.type} (W ${recipe.flourRecommendation.w}). Lievitazione ${document.getElementById("input-room-hours").value}h a temp ambiente + ${document.getElementById("input-fridge-hours").value}h frigo.`;
+  document.getElementById("journal-modal").classList.remove("hidden");
+}
+
+function closeJournalModal() {
+  document.getElementById("journal-modal").classList.add("hidden");
+}
+
+function saveJournalEntryConfirm() {
+  const title = document.getElementById("modal-journal-title").value.trim() || "Impasto";
+  const hydro = parseInt(document.getElementById("modal-journal-hydro").value) || 65;
+  const rating = parseInt(document.getElementById("modal-journal-rating").value) || 5;
+  const notes = document.getElementById("modal-journal-notes").value.trim();
+
+  DoughStorage.addJournalEntry({
+    recipeName: title,
+    hydration: hydro,
+    rating,
+    notes
+  });
+
+  closeJournalModal();
+  renderJournal();
+  switchTab("journal");
+}
+
+function deleteJournalItem(id) {
+  if (confirm("Vuoi eliminare questo appunto dal diario?")) {
+    DoughStorage.deleteJournalEntry(id);
+    renderJournal();
+  }
+}
+
+// Utility per evitare iniezioni HTML semplici
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ==========================================
+// TOAST NOTIFICA FLOTTANTE
+// ==========================================
+function showToast(message) {
+  const toast = document.getElementById("toast-notification");
+  const toastMsg = document.getElementById("toast-message");
+  if (!toast) return;
+  if (toastMsg) toastMsg.textContent = message;
+  toast.classList.remove("hidden");
+  toast.classList.add("flex");
+
+  if (window._toastTimer) clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => {
+    toast.classList.add("hidden");
+    toast.classList.remove("flex");
+  }, 2800);
+}
+
+// ==========================================
+// TEST SUONERIA TIMER
+// ==========================================
+function testTimerSound() {
+  playTimerBell();
+  showToast("🔔 Suoneria del timer testata con successo!");
+}
+
+// ==========================================
+// COPIA RICETTA FORMATTATA PER WHATSAPP / NOTE
+// ==========================================
+function copyRecipeToClipboard() {
+  const recipe = (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA : []).find(r => r.id === AppState.selectedRecipeId) || (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA[0] : null);
+  const oven = (typeof OVENS_DATA !== "undefined" ? OVENS_DATA : []).find(o => o.id === AppState.selectedOvenId);
+
+  const numPanetti = document.getElementById("input-num-panetti")?.value || "4";
+  const weightPanetto = document.getElementById("input-weight-panetto")?.value || "260";
+  const totalWeight = document.getElementById("res-total-weight")?.textContent || "1040 g";
+  const flour = document.getElementById("res-flour")?.textContent || "";
+  const water = document.getElementById("res-water")?.textContent || "";
+  const yeast = document.getElementById("res-yeast")?.textContent || "";
+  const yeastType = document.getElementById("res-yeast-type-label")?.textContent || "Fresco";
+  const salt = document.getElementById("res-salt")?.textContent || "";
+  const hydration = document.getElementById("input-hydration")?.value || "65";
+  const oil = document.getElementById("res-oil")?.textContent || "0 g";
+  const sugar = document.getElementById("res-sugar")?.textContent || "0 g";
+  const roomTemp = document.getElementById("input-room-temp")?.value || "21";
+  const roomHours = document.getElementById("input-room-hours")?.value || "8";
+  const fridgeHours = document.getElementById("input-fridge-hours")?.value || "0";
+
+  const methodName = AppState.selectedMethod === "biga" ? `Biga (${AppState.prefermentPct}%)` : (AppState.selectedMethod === "poolish" ? `Poolish (${AppState.prefermentPct}%)` : "Diretto");
+
+  let lines = [
+    `🍕 *${recipe ? recipe.name.toUpperCase() : 'IMPASTO'}* - Scheda Calcolata`,
+    `⚖️ Porzioni: ${numPanetti} panetti da ${weightPanetto}g (Totale ${totalWeight})`,
+    `💧 Idratazione: ${hydration}% | Metodo: ${methodName}`,
+    `⏳ Lievitazione: ${roomHours}h a T.A. (${roomTemp}°C) ${parseInt(fridgeHours) > 0 ? `+ ${fridgeHours}h in Frigo` : ''}`,
+    ``,
+    `📋 *DOSI TOTALI:*`,
+    `• Farina: ${flour} ${recipe && recipe.flourRecommendation ? `(${recipe.flourRecommendation.type}, W ${recipe.flourRecommendation.w})` : ''}`,
+    `• Acqua: ${water}`,
+    `• Lievito: ${yeast} (${yeastType})`,
+    `• Sale: ${salt}`
+  ];
+
+  if (parseFloat(oil) > 0) lines.push(`• Olio EVO: ${oil}`);
+  if (parseFloat(sugar) > 0) lines.push(`• Zucchero/Malto: ${sugar}`);
+
+  if (AppState.selectedMethod !== "direct") {
+    const prefFlour = document.getElementById("breakdown-pref-flour")?.textContent;
+    const prefWater = document.getElementById("breakdown-pref-water")?.textContent;
+    const prefYeast = document.getElementById("breakdown-pref-yeast")?.textContent;
+    const refFlour = document.getElementById("breakdown-ref-flour")?.textContent;
+    const refWater = document.getElementById("breakdown-ref-water")?.textContent;
+    const refSalt = document.getElementById("breakdown-ref-salt")?.textContent;
+
+    lines.push(``);
+    lines.push(`🥣 *FASE 1 - PRE-FERMENTO (${methodName}):*`);
+    lines.push(`• Farina: ${prefFlour} | Acqua: ${prefWater} | Lievito: ${prefYeast}`);
+    lines.push(`🥣 *FASE 2 - RINFRESCO:*`);
+    lines.push(`• Farina: ${refFlour} | Acqua residua: ${refWater} | Sale: ${refSalt}`);
+  }
+
+  if (oven) {
+    lines.push(``);
+    lines.push(`🔥 Cottura suggerita: ${oven.name} (${oven.maxTemp})`);
+  }
+
+  lines.push(``);
+  lines.push(`👨‍🍳 *Teoria del Maestro* • Maestro degli Impasti`);
+
+  const textToCopy = lines.join("\n");
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => showToast("Ricetta copiata negli appunti! 📋"))
+      .catch(() => fallbackCopy(textToCopy));
+  } else {
+    fallbackCopy(textToCopy);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand("copy");
+    showToast("Ricetta copiata negli appunti! 📋");
+  } catch (err) {
+    prompt("Copia la ricetta da qui:", text);
+  }
+  document.body.removeChild(ta);
+}
+
+// ==========================================
+// STAMPA SCHEDA DA BANCO A4
+// ==========================================
+function printRecipeCard() {
+  const recipe = (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA : []).find(r => r.id === AppState.selectedRecipeId) || (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA[0] : null);
+  const oven = (typeof OVENS_DATA !== "undefined" ? OVENS_DATA : []).find(o => o.id === AppState.selectedOvenId);
+
+  const numPanetti = document.getElementById("input-num-panetti")?.value || "4";
+  const weightPanetto = document.getElementById("input-weight-panetto")?.value || "260";
+  const totalWeight = document.getElementById("res-total-weight")?.textContent || "1040 g";
+  const flour = document.getElementById("res-flour")?.textContent || "";
+  const water = document.getElementById("res-water")?.textContent || "";
+  const yeast = document.getElementById("res-yeast")?.textContent || "";
+  const yeastType = document.getElementById("res-yeast-type-label")?.textContent || "Fresco";
+  const salt = document.getElementById("res-salt")?.textContent || "";
+  const hydration = document.getElementById("input-hydration")?.value || "65";
+  const oil = document.getElementById("res-oil")?.textContent || "0 g";
+  const sugar = document.getElementById("res-sugar")?.textContent || "0 g";
+  const roomTemp = document.getElementById("input-room-temp")?.value || "21";
+  const roomHours = document.getElementById("input-room-hours")?.value || "8";
+  const fridgeHours = document.getElementById("input-fridge-hours")?.value || "0";
+  const saltPct = document.getElementById("input-salt-pct")?.value || "2.5";
+  const oilPct = document.getElementById("input-oil-pct")?.value || "0";
+  const today = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const methodName = AppState.selectedMethod === "biga" ? `Biga (${AppState.prefermentPct}%)` : (AppState.selectedMethod === "poolish" ? `Poolish (${AppState.prefermentPct}%)` : "Diretto");
+
+  let prefermentHtml = "";
+  if (AppState.selectedMethod !== "direct") {
+    const prefFlour = document.getElementById("breakdown-pref-flour")?.textContent;
+    const prefWater = document.getElementById("breakdown-pref-water")?.textContent;
+    const prefYeast = document.getElementById("breakdown-pref-yeast")?.textContent;
+    const refFlour = document.getElementById("breakdown-ref-flour")?.textContent;
+    const refWater = document.getElementById("breakdown-ref-water")?.textContent;
+    const refSalt = document.getElementById("breakdown-ref-salt")?.textContent;
+    const refOil = document.getElementById("breakdown-ref-oil")?.textContent;
+
+    prefermentHtml = `
+      <div style="margin-top: 14px; border: 1px solid #222; padding: 10px; border-radius: 6px; background: #fafafa;">
+        <h4 style="margin: 0 0 6px 0; font-size: 13px; text-transform: uppercase; font-weight: 800;">Scomposizione ${methodName}</h4>
+        <div style="display: flex; justify-content: space-between; gap: 15px; font-size: 12px;">
+          <div style="flex: 1; border-right: 1px dashed #888; padding-right: 10px;">
+            <strong>Fase 1: Pre-fermento</strong><br>
+            • Farina: <strong>${prefFlour}</strong><br>
+            • Acqua: <strong>${prefWater}</strong><br>
+            • Lievito: <strong>${prefYeast}</strong>
+          </div>
+          <div style="flex: 1;">
+            <strong>Fase 2: Rinfresco / Chiusura</strong><br>
+            • Farina: <strong>${refFlour}</strong><br>
+            • Acqua residua: <strong>${refWater}</strong><br>
+            • Sale: <strong>${refSalt}</strong>
+            ${parseFloat(oil) > 0 ? `<br>• Olio: <strong>${refOil}</strong>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  const printSheet = document.getElementById("print-sheet");
+  if (!printSheet) return;
+
+  printSheet.innerHTML = `
+    <div style="border: 2px solid #000; padding: 22px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #000; background: #fff; max-width: 750px; margin: 0 auto;">
+      
+      <!-- Intestazione -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 12px;">
+        <div>
+          <h1 style="margin: 0; font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">Maestro degli Impasti</h1>
+          <p style="margin: 3px 0 0 0; font-size: 12px; color: #333;">Scheda Tecnica di Produzione da Banco • Teoria del Maestro</p>
+        </div>
+        <div style="text-align: right; font-size: 11px;">
+          <div>Data: <strong>${today}</strong></div>
+          <div>Metodo: <strong>${methodName}</strong></div>
+        </div>
+      </div>
+
+      <!-- Info Ricetta Principale -->
+      <div style="margin: 14px 0; padding: 12px; background: #f4f4f4; border: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; border-radius: 6px;">
+        <div>
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800;">${recipe ? recipe.name : 'Impasto'}</h2>
+          <span style="font-size: 12px; color: #444;">${recipe ? recipe.tagline : ''}</span>
+        </div>
+        <div style="text-align: right; font-size: 13px;">
+          <strong>${numPanetti} panetti</strong> da <strong>${weightPanetto} g</strong><br>
+          <span style="font-size: 11px; color: #555;">Peso Totale: <strong>${totalWeight}</strong></span>
+        </div>
+      </div>
+
+      <!-- Parametri Fondamentali -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; text-align: center;">
+        <div style="border: 1px solid #000; padding: 8px; border-radius: 4px;">
+          <div style="font-size: 10px; text-transform: uppercase; color: #444;">Idratazione</div>
+          <div style="font-size: 17px; font-weight: 900;">${hydration}%</div>
+        </div>
+        <div style="border: 1px solid #000; padding: 8px; border-radius: 4px;">
+          <div style="font-size: 10px; text-transform: uppercase; color: #444;">Temp. Ambiente</div>
+          <div style="font-size: 17px; font-weight: 900;">${roomTemp}°C</div>
+        </div>
+        <div style="border: 1px solid #000; padding: 8px; border-radius: 4px;">
+          <div style="font-size: 10px; text-transform: uppercase; color: #444;">Tempo T.A.</div>
+          <div style="font-size: 17px; font-weight: 900;">${roomHours} h</div>
+        </div>
+        <div style="border: 1px solid #000; padding: 8px; border-radius: 4px;">
+          <div style="font-size: 10px; text-transform: uppercase; color: #444;">Tempo Frigo</div>
+          <div style="font-size: 17px; font-weight: 900;">${fridgeHours} h</div>
+        </div>
+      </div>
+
+      <!-- Tabella Ingredienti del Fornaio -->
+      <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px;">
+        <thead>
+          <tr style="background: #000; color: #fff;">
+            <th style="padding: 7px 10px; text-align: left;">Ingrediente</th>
+            <th style="padding: 7px 10px; text-align: right;">% Fornaio</th>
+            <th style="padding: 7px 10px; text-align: right;">Peso Reale</th>
+            <th style="padding: 7px 10px; text-align: left;">Specifiche & Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 7px 10px; font-weight: bold;">🌾 Farina</td>
+            <td style="padding: 7px 10px; text-align: right;">100%</td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 900; font-size: 14px;">${flour}</td>
+            <td style="padding: 7px 10px; font-size: 11px;">${recipe && recipe.flourRecommendation ? `${recipe.flourRecommendation.type} (W ${recipe.flourRecommendation.w}, Prot. ${recipe.flourRecommendation.protein})` : ''}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 7px 10px; font-weight: bold;">💧 Acqua</td>
+            <td style="padding: 7px 10px; text-align: right;">${hydration}%</td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 900; font-size: 14px;">${water}</td>
+            <td style="padding: 7px 10px; font-size: 11px;">Temp. consigliata ~16-18°C</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 7px 10px; font-weight: bold;">✨ Lievito (${yeastType})</td>
+            <td style="padding: 7px 10px; text-align: right;">-</td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 900; font-size: 14px;">${yeast}</td>
+            <td style="padding: 7px 10px; font-size: 11px;">Fermentazione controllata</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 7px 10px; font-weight: bold;">🧂 Sale Marino</td>
+            <td style="padding: 7px 10px; text-align: right;">${saltPct}%</td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 900; font-size: 14px;">${salt}</td>
+            <td style="padding: 7px 10px; font-size: 11px;">Aggiungere a metà impasto</td>
+          </tr>
+          ${parseFloat(oil) > 0 ? `
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 7px 10px; font-weight: bold;">🫒 Olio Extravergine</td>
+            <td style="padding: 7px 10px; text-align: right;">${oilPct}%</td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 900; font-size: 14px;">${oil}</td>
+            <td style="padding: 7px 10px; font-size: 11px;">A filo alla fine dell'incordatura</td>
+          </tr>` : ''}
+          ${parseFloat(sugar) > 0 ? `
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 7px 10px; font-weight: bold;">🍯 Malto / Zucchero</td>
+            <td style="padding: 7px 10px; text-align: right;">-</td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 900; font-size: 14px;">${sugar}</td>
+            <td style="padding: 7px 10px; font-size: 11px;">Nutrimento lieviti e doratura forno</td>
+          </tr>` : ''}
+        </tbody>
+      </table>
+
+      ${prefermentHtml}
+
+      <!-- Cottura e Forno -->
+      <div style="margin-top: 14px; border: 1px solid #222; padding: 10px; border-radius: 6px; font-size: 11.5px; background: #fff;">
+        <strong>🔥 Indicazioni di Cottura (${oven ? oven.name : 'Forno'}):</strong>
+        <div style="margin-top: 3px; color: #222; line-height: 1.4;">
+          ${oven && oven.recipesAdvice && oven.recipesAdvice[recipe.id] ? (oven.recipesAdvice[recipe.id].tips || oven.adviceGeneral) : (oven ? oven.adviceGeneral : 'Preriscalda accuratamente il forno.')}
+        </div>
+      </div>
+
+      <!-- Spazio Note del Pizzaiolo -->
+      <div style="margin-top: 16px; border-top: 1px dashed #000; padding-top: 8px;">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase;">Note del Pizzaiolo (Scrivi qui):</div>
+        <div style="height: 45px; border-bottom: 1px dotted #aaa; margin-top: 8px;"></div>
+        <div style="height: 25px; border-bottom: 1px dotted #aaa;"></div>
+      </div>
+
+      <!-- Footer Stampa -->
+      <div style="margin-top: 14px; text-align: center; font-size: 9.5px; color: #666; border-top: 1px solid #ccc; padding-top: 6px;">
+        Maestro degli Impasti • Stampato da banco per uso professionale o casalingo • Calcolo scientifico Baker's Math
+      </div>
+
+    </div>
+  `;
+
+  window.print();
+}
+
+// Esportazione funzioni su window per accesso globale
+window.syncFromSlider = syncFromSlider;
+window.syncFromInput = syncFromInput;
+window.copyRecipeToClipboard = copyRecipeToClipboard;
+window.printRecipeCard = printRecipeCard;
+window.testTimerSound = testTimerSound;
+window.showToast = showToast;
+
+
+  </script>
 </body>
 </html>
