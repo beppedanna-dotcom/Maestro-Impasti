@@ -2,7 +2,7 @@
  * Maestro degli Impasti - Service Worker per PWA e Modalità Offline
  */
 
-const CACHE_NAME = "maestro-impasti-v2";
+const CACHE_NAME = "maestro-impasti-v3";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

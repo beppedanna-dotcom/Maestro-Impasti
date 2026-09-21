@@ -754,7 +754,7 @@ function updateOvenAdvisor() {
     if (warningMsg) warningMsg.textContent = recipeAdvice.warningMessage;
     if (suggestionBox) suggestionBox.classList.add("hidden");
     if (adaptBox) adaptBox.classList.add("hidden");
-    if (tipsText) tipsText.textContent = recipeAdvice.tips || oven.adviceGeneral;
+    if (tipsText) tipsText.innerHTML = (recipeAdvice.tips || oven.adviceGeneral || "").replace(/\n/g, "<br>");
 
   } else {
     // Perfetto
@@ -768,7 +768,7 @@ function updateOvenAdvisor() {
     if (warningBox) warningBox.classList.add("hidden");
     if (suggestionBox) suggestionBox.classList.add("hidden");
     if (adaptBox) adaptBox.classList.add("hidden");
-    if (tipsText) tipsText.textContent = recipeAdvice.tips || oven.adviceGeneral;
+    if (tipsText) tipsText.innerHTML = (recipeAdvice.tips || oven.adviceGeneral || "").replace(/\n/g, "<br>");
   }
 
   if (window.lucide) lucide.createIcons();
@@ -1052,6 +1052,11 @@ function loadAcademyRecipe(recipeId) {
             stepInstruction = `⚠️ COTTURA FORNO DI CASA A 250°C (Tecnica Padella + Grill): La classica tonda a 250°C non svilupperà il cornicione in tempo. Procedi così: 1) Preriscalda il forno al massimo (250-275°C) con il grill acceso e la leccarda sul ripiano più alto. 2) Scalda una padella antiaderente o in ghisa sul fornello a gas finché è rovente. 3) Stendi il panetto, adagialo in padella e condisci velocemente. 4) Cuoci per 90-120 secondi sul gas per cuocere e tostare il fondo. 5) Trasferisci immediatamente la padella (o fai scivolare la pizza) sotto il grill del forno per altri 2-3 minuti per dorare il cornicione.`;
             stepDuration = 5;
             stepWhy = "Nel forno casalingo la potenza termica è insufficiente; la padella rovente trasferisce calore per conduzione sul fondo mentre il grill fornisce l'irraggiamento dall'alto simulando la fiamma viva.";
+          } else if (recipe.id === "pane_casereccio" || isPane) {
+            stepTitle = `Cottura Pane con ${oven.name} (Teglia o Pentola)`;
+            stepInstruction = `Nel forno di casa il pane necessita di umidità e vapore nei primi 20 minuti per crescere alto e sviluppare una crosta friabile e dorata. Puoi scegliere il metodo più comodo per te:\n\n• 🥖 METODO 1 - SU TEGLIA CLASSICA (Senza pentola speciale): Preriscalda il forno a 240°C con la leccarda all'interno e posiziona sul fondo del forno un pentolino con poca acqua bollente per creare vapore. Inforna la pagnotta direttamente sulla leccarda rovente. Cuoci per 20 minuti a 240°C con il vapore dell'acqua; poi rimuovi con cautela il pentolino d'acqua, abbassa il forno a 200°C e prosegui per altri 20-25 minuti finché la crosta è ben dorata.\n\n• 🥘 METODO 2 - IN PENTOLA DA FORNO (Se possiedi una pentola/cocotte in ghisa o pirex con coperchio): Inserisci la pentola con il suo coperchio nel forno e preriscalda a 240°C per 40 minuti. Inserisci la pagnotta nella pentola, metti il coperchio alla pentola e cuoci per 20 minuti (il coperchio trattiene il vapore naturale del pane). Poi togli il coperchio dalla pentola, abbassa a 200°C e cuoci altri 20-25 minuti per dorare la crosta.`;
+            stepDuration = 45;
+            stepWhy = "Il vapore iniziale (generato dal pentolino d'acqua o intrappolato dal coperchio chiuso della pentola) mantiene la superficie dell'impasto morbida ed elastica, permettendo al pane di sviluppare volume prima che il calore sigilli la crosta.";
           } else {
             stepInstruction = `${step.instruction} • Consiglio Forno di Casa: Preriscalda per almeno 40 minuti per stabilizzare la temperatura.`;
           }
@@ -1097,7 +1102,7 @@ function loadAcademyRecipe(recipeId) {
         ${hasTimerBtn}
       </div>
 
-      <p class="text-sm text-stone-700 leading-relaxed font-normal">
+      <p class="text-sm text-stone-700 leading-relaxed font-normal whitespace-pre-line">
         ${stepInstruction}
       </p>
 

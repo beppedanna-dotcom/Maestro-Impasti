@@ -353,11 +353,11 @@ const RECIPES_DATA = [
       },
       {
         step: 5,
-        title: "Cottura in Pentola di Ghisa (Dutch Oven)",
+        title: "Cottura nel Forno di Casa (Su Teglia con Vapore o in Pentola)",
         durationMinutes: 45,
         hasTimer: true,
-        instruction: "Preriscalda la pentola di ghisa con coperchio a 240°C per 40 minuti. Inserisci la pagnotta, chiudi col coperchio e cuoci per 20 minuti. Togli il coperchio, abbassa a 200°C e prosegui per altri 25 minuti per dorare la crosta.",
-        whyItWorks: "La pentola chiusa intrappola il vapore rilasciato dall'impasto stesso. Il vapore mantiene morbida la crosta nei primi 20 minuti permettendo al pane di gonfiarsi al massimo prima di caramellare."
+        instruction: "Nel forno di casa il pane necessita di umidità e vapore nei primi 20 minuti per crescere alto e sviluppare una crosta croccante e dorata. Puoi scegliere tra due metodi:\n\n• 🥖 METODO 1 - SU TEGLIA CLASSICA (Consigliato per tutti): Preriscalda il forno a 240°C con la leccarda/teglia all'interno e posiziona sul fondo del forno un pentolino con poca acqua per creare vapore. Fai scivolare la pagnotta con carta forno direttamente sulla leccarda rovente. Cuoci per 20 minuti a 240°C con il vapore dell'acqua; poi rimuovi con cautela il pentolino d'acqua, abbassa il forno a 200°C e cuoci per altri 20-25 minuti fino a quando la crosta è ben dorata.\n\n• 🥘 METODO 2 - IN PENTOLA DA FORNO (Se hai una pentola/cocotte in ghisa o pirex con coperchio): Preriscalda la pentola con il suo coperchio nel forno a 240°C per 40 minuti. Inserisci la pagnotta nella pentola, chiudi il coperchio della pentola e cuoci per 20 minuti (il coperchio della pentola trattiene il vapore naturale del pane). Poi togli il coperchio dalla pentola, abbassa il forno a 200°C e continua per 20-25 minuti per dorare la crosta.",
+        whyItWorks: "Nei primi 20 minuti il vapore (generato dal pentolino d'acqua o intrappolato dal coperchio chiuso della pentola) mantiene la superficie dell'impasto morbida ed elastica, consentendo alla pagnotta di sviluppare volume prima che il calore sigilli la crosta."
       }
     ]
   },
@@ -431,7 +431,7 @@ const OVENS_DATA = [
     icon: "home",
     maxTemp: "250°C - 275°C",
     type: "domestico",
-    adviceGeneral: "Il forno di casa cuoce per irraggiamento e convenzione più lenta. È perfetto per teglie, focacce e pane in pentola!",
+    adviceGeneral: "Il forno di casa cuoce per irraggiamento e convezione lenta. È perfetto per teglie, focacce e pane casereccio (su teglia con vapore o in pentola)!",
     recipesAdvice: {
       pizza_napoletana: {
         compatible: false,
@@ -471,9 +471,9 @@ const OVENS_DATA = [
       pane_casereccio: {
         compatible: true,
         warningLevel: "none",
-        warningTitle: "Ottimo con la tecnica della Pentola (Dutch Oven)",
-        warningMessage: "Nel forno di casa a 240°C, la pentola di ghisa con coperchio riproduce il calore e il vapore di un forno professionale da panificio.",
-        tips: "20 minuti a 240°C con coperchio chiuso, poi togli il coperchio e abbassa a 200°C per 20 minuti per dorare la crosta."
+        warningTitle: "Ottimo per il Pane Casereccio (Su Teglia o in Pentola)",
+        warningMessage: "Nel forno di casa a 240°C puoi cuocere sia su normale teglia (con un pentolino d'acqua sul fondo per il vapore) sia dentro una pentola da forno con coperchio.",
+        tips: "🥖 Su teglia classica: cuoci 20 min a 240°C con un pentolino d'acqua sul fondo del forno per fare vapore, poi togli l'acqua e prosegui a 200°C per 20-25 min.\n\n🥘 In pentola da forno: inserisci la pentola nel forno, cuoci 20 min a 240°C col coperchio della pentola chiuso, poi togli il coperchio e abbassa a 200°C per 20 min."
       },
       pizza_classica: {
         compatible: true,
