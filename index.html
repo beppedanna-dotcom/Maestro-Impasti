@@ -1306,7 +1306,7 @@ const RECIPES_DATA = [
         title: "Staglio e Formatura Panetti",
         durationMinutes: 10,
         hasTimer: false,
-        instruction: "Dividi l'impasto in 4 panetti da circa 240g ciascuno. Arrotondali sul banco con le mani a coppa per formare delle palline lisce. Adagiale su un vassoio spolverato di farina e copri ermeticamente.",
+        instruction: "Dividi l'impasto nei panetti desiderati (es. 4 panetti da circa 240g ciascuno). Arrotondali sul banco con le mani a coppa per formare delle palline lisce. Adagiale su un vassoio spolverato di farina e copri ermeticamente.",
         whyItWorks: "La formatura compatta la maglia; il successivo riposo la rilasserà per una stesura senza resistenza."
       },
       {
@@ -3501,6 +3501,11 @@ function updateCalculator() {
   if (window.MaestroAgent) {
     MaestroAgent.updateContextPill();
   }
+
+  // Se l'utente è nella tab Academy, mantieni i passi sincronizzati con le dosi correnti
+  if (AppState.activeTab === "academy") {
+    loadAcademyRecipe(AppState.selectedRecipeId);
+  }
 }
 
 // ==========================================
@@ -3670,39 +3675,143 @@ function loadAcademyRecipe(recipeId) {
   const recipe = RECIPES_DATA.find(r => r.id === recipeId) || RECIPES_DATA[0];
   AppState.selectedRecipeId = recipeId;
 
-  document.getElementById("academy-recipe-title").textContent = `${recipe.name} (${AppState.selectedMethod === 'biga' ? 'Metodo con Biga' : (AppState.selectedMethod === 'poolish' ? 'Metodo con Poolish' : 'Metodo Diretto')})`;
+  // 1. Lettura dinamica dei panetti e pesi dal calcolatore attivo
+  const numPanetti = parseInt(document.getElementById("input-num-panetti-val")?.value || document.getElementById("input-num-panetti")?.value) || recipe.defaultPieces || 4;
+  const weightPanetto = parseInt(document.getElementById("input-weight-panetto-val")?.value || document.getElementById("input-weight-panetto")?.value) || recipe.defaultDoughWeight || 260;
+  const hydration = parseInt(document.getElementById("input-hydration-val")?.value || document.getElementById("input-hydration")?.value) || recipe.defaultHydration || 65;
+  const totalWeight = numPanetti * weightPanetto;
+
+  AppState.numPanetti = numPanetti;
+  AppState.weightPanetto = weightPanetto;
+
+  // Lettura parametri secondari per calcolo ingredienti coerenti
+  const saltPct = parseFloat(document.getElementById("input-salt-pct")?.value) || recipe.defaultSalt || 2.5;
+  const oilPct = parseFloat(document.getElementById("input-oil-pct")?.value) || recipe.defaultOil || 0;
+  const sugarPct = parseFloat(document.getElementById("input-sugar-pct")?.value) || 0;
+  const roomTemp = parseInt(document.getElementById("input-room-temp")?.value) || recipe.defaultRoomTemp || 21;
+  const roomHours = parseInt(document.getElementById("input-room-hours")?.value) || 8;
+  const fridgeHours = parseInt(document.getElementById("input-fridge-hours")?.value) || 0;
+
+  // Calcolo esatto per la pezzatura corrente
+  const calcResult = DoughCalculator.calculate({
+    targetTotalWeight: totalWeight,
+    hydration,
+    salt: saltPct,
+    oil: oilPct,
+    sugar: sugarPct,
+    roomHours,
+    fridgeHours,
+    tempC: roomTemp,
+    yeastType: AppState.selectedYeastType
+  });
+
+  const prefermentResult = DoughCalculator.calculatePreferment(calcResult, AppState.selectedMethod, AppState.prefermentPct);
+
+  const methodLabel = AppState.selectedMethod === 'biga' ? 'Metodo con Biga' : (AppState.selectedMethod === 'poolish' ? 'Metodo con Poolish' : 'Metodo Diretto');
+  document.getElementById("academy-recipe-title").textContent = `${recipe.name} (${methodLabel})`;
   document.getElementById("academy-recipe-tagline").textContent = recipe.tagline;
+
+  // Badge dinamico Panetti & Peso Totale nell'intestazione Academy
+  let batchInfoEl = document.getElementById("academy-batch-info");
+  if (!batchInfoEl) {
+    batchInfoEl = document.createElement("div");
+    batchInfoEl.id = "academy-batch-info";
+    batchInfoEl.className = "flex flex-wrap items-center gap-2 mt-2.5";
+    const headerCol = document.getElementById("academy-recipe-title")?.parentElement;
+    if (headerCol) headerCol.appendChild(batchInfoEl);
+  }
+
+  const isPizza = recipe.category === 'pizza' || recipe.id.includes('pizza');
+  const isPane = recipe.id.includes('pane');
+  const unitLabelSingular = isPizza ? 'panetto' : (isPane ? 'pagnotta' : 'teglia');
+  const unitLabelPlural = isPizza ? 'panetti' : (isPane ? 'pagnotte' : 'teglie');
+  const unitLabel = numPanetti === 1 ? unitLabelSingular : unitLabelPlural;
+
+  if (batchInfoEl) {
+    batchInfoEl.innerHTML = `
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-sm">
+        <i data-lucide="layers" class="w-3.5 h-3.5 text-amber-700"></i>
+        <span><strong>${numPanetti}</strong> ${unitLabel} da <strong>${weightPanetto}g</strong></span>
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-stone-100 text-stone-700 border border-stone-300 shadow-sm">
+        <i data-lucide="scale" class="w-3.5 h-3.5 text-stone-600"></i>
+        <span>Impasto totale: <strong>${calcResult.actualTotalWeight || totalWeight}g</strong></span>
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-sm">
+        <i data-lucide="droplet" class="w-3.5 h-3.5 text-blue-600"></i>
+        <span>Idratazione: <strong>${calcResult.hydration}%</strong></span>
+      </span>
+    `;
+  }
 
   const container = document.getElementById("academy-steps-container");
   if (!container) return;
 
   container.innerHTML = "";
 
+  // Card Riepilogo Dosi Pesate per questa specifica sessione
+  const summaryCard = document.createElement("div");
+  summaryCard.className = "bg-stone-900 rounded-2xl p-5 border border-amber-500/40 text-white space-y-3 shadow-lg";
+  let summaryHtml = `
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-stone-800 pb-3">
+      <div class="flex items-center gap-2 text-amber-300 font-bold font-serif-display text-sm sm:text-base">
+        <i data-lucide="clipboard-list" class="w-4 h-4 text-amber-400"></i>
+        <span>Dosi Esatte per ${numPanetti} ${numPanetti === 1 ? unitLabelSingular : unitLabelPlural} (${calcResult.actualTotalWeight || totalWeight}g totali)</span>
+      </div>
+      <span class="text-[11px] bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full font-bold border border-amber-500/30">
+        ${methodLabel}
+      </span>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+      <div class="bg-stone-800/80 p-2.5 rounded-xl border border-stone-700/80">
+        <div class="text-stone-400 text-[11px]">Farina Totale</div>
+        <div class="text-sm font-bold text-white font-mono">${calcResult.flour} g</div>
+      </div>
+      <div class="bg-stone-800/80 p-2.5 rounded-xl border border-stone-700/80">
+        <div class="text-stone-400 text-[11px]">Acqua (${calcResult.hydration}%)</div>
+        <div class="text-sm font-bold text-blue-400 font-mono">${calcResult.water} g</div>
+      </div>
+      <div class="bg-stone-800/80 p-2.5 rounded-xl border border-stone-700/80">
+        <div class="text-stone-400 text-[11px]">Lievito (${calcResult.yeastType})</div>
+        <div class="text-sm font-bold text-amber-400 font-mono">${calcResult.yeast} g</div>
+      </div>
+      <div class="bg-stone-800/80 p-2.5 rounded-xl border border-stone-700/80">
+        <div class="text-stone-400 text-[11px]">Sale (${saltPct}%)</div>
+        <div class="text-sm font-bold text-stone-200 font-mono">${calcResult.salt} g</div>
+      </div>
+    </div>
+  `;
+  if (calcResult.oil > 0) {
+    summaryHtml += `<div class="text-[11px] text-stone-300 mt-1 flex items-center gap-1.5"><i data-lucide="cup-soda" class="w-3.5 h-3.5 text-yellow-500"></i> Olio Extravergine: <strong class="text-white font-mono">${calcResult.oil} g</strong></div>`;
+  }
+  summaryCard.innerHTML = summaryHtml;
+  container.appendChild(summaryCard);
+
   // Costruzione della lista dei passi in base al metodo di impasto
   let stepsToRender = [];
 
-  if (AppState.selectedMethod === "biga") {
+  if (AppState.selectedMethod === "biga" && prefermentResult) {
     // Fase 1: Biga
     stepsToRender.push({
       step: 1,
-      title: "1. Preparazione della Biga (16-24 ore prima)",
+      title: `1. Preparazione della Biga (${prefermentResult.preferment.flour}g Farina - 16-24h prima)`,
       durationMinutes: 15,
       hasTimer: false,
-      instruction: `Pesa la farina della biga (${AppState.prefermentPct}% del totale), l'acqua fredda (45% sulla farina) e il lievito. Mescola energicamente in una ciotola solo per 2-3 minuti finché non c'è più farina asciutta visibile. NON impastare e non creare maglia glutinica: la biga deve restare sgranata, grezza e a pezzetti. Metti in un contenitore capiente, copri con telo umido o coperchio forato e lascia fermentare a 16-18°C per 16-24 ore.`,
+      instruction: `Pesa la farina forte della biga (${prefermentResult.preferment.flour}g, pari al ${AppState.prefermentPct}% del totale), l'acqua fredda (${prefermentResult.preferment.water}g, 45% sulla farina) e il lievito (${prefermentResult.preferment.yeast}g). Mescola energicamente in una ciotola solo per 2-3 minuti finché non c'è più farina asciutta visibile. NON impastare e non formare maglia glutinica: la biga deve restare sgranata, grezza e spezzettata. Metti in un contenitore capiente, copri con telo umido o coperchio forato e lascia fermentare a 16-18°C per 16-24 ore.`,
       whyItWorks: "Durante le 18 ore di fermentazione lenta, la proteolisi controllata e la produzione di acidi organici renderanno l'impasto finale incredibilmente estensibile e daranno un cornicione alveolato e croccante con profumi intensi."
     });
 
     // Fase 2: Chiusura
+    const bigaTotalWeight = prefermentResult.preferment.flour + prefermentResult.preferment.water + prefermentResult.preferment.yeast;
     stepsToRender.push({
       step: 2,
-      title: "2. Chiusura e Rinfresco dell'Impasto",
+      title: `2. Chiusura e Rinfresco dell'Impasto (${numPanetti} ${unitLabel})`,
       durationMinutes: 20,
       hasTimer: false,
-      instruction: `Taglia o spezzetta la biga maturata a pezzi nella ciotola. Unisci la farina del rinfresco e circa il 70% dell'acqua rimasta (fredda). Lavora a velocità bassa per sciogliere i pezzetti di biga. Appena si forma una struttura elastica, unisci il sale e la restante acqua a filo poco alla volta. Infine unisci l'olio se previsto.`,
+      instruction: `Spezzetta tutta la biga maturata (${bigaTotalWeight}g) nella ciotola. Unisci la farina del rinfresco (${prefermentResult.refresh.flour}g) e circa il 70% dell'acqua residua (${Math.round(prefermentResult.refresh.water * 0.7)}g, fredda). Lavora a velocità bassa per sciogliere i pezzetti di biga. Appena si forma una struttura elastica, unisci ${prefermentResult.refresh.salt}g di sale e la restante acqua a filo (${Math.round(prefermentResult.refresh.water * 0.3)}g). ${calcResult.oil > 0 ? `Infine unisci ${calcResult.oil}g di olio.` : ''}`,
       whyItWorks: "Aggiungere l'acqua fredda gradualmente permette alla biga di incorporarsi senza 'annegare' il glutine."
     });
 
-    // Aggiungi gli step successivi della ricetta (Puntata/Riposo, Staglio, Appretto, Stesura, Cottura)
     const subsequentSteps = recipe.steps.filter(s => s.step >= 3);
     subsequentSteps.forEach((s, idx) => {
       stepsToRender.push({
@@ -3711,24 +3820,24 @@ function loadAcademyRecipe(recipeId) {
       });
     });
 
-  } else if (AppState.selectedMethod === "poolish") {
+  } else if (AppState.selectedMethod === "poolish" && prefermentResult) {
     // Fase 1: Poolish
     stepsToRender.push({
       step: 1,
-      title: "1. Preparazione del Poolish (8-14 ore prima)",
+      title: `1. Preparazione del Poolish (${prefermentResult.preferment.flour}g Farina - 8-14h prima)`,
       durationMinutes: 10,
       hasTimer: false,
-      instruction: `Unisci in parti uguali farina e acqua con il lievito in una caraffa o barattolo alto. Mescola vigorosamente con una forchetta fino a formare una crema priva di grumi. Segna il livello iniziale con un elastico. Copri e lascia riposare a 20-22°C per 8-12 ore. Sarà pronto quando la superficie è colma di bolle fitte e il centro accenna appena a cedere.`,
+      instruction: `Unisci in parti uguali ${prefermentResult.preferment.flour}g di farina e ${prefermentResult.preferment.water}g di acqua con ${prefermentResult.preferment.yeast}g di lievito in una caraffa o barattolo alto. Mescola vigorosamente con una forchetta fino a formare una crema priva di grumi. Segna il livello iniziale con un elastico. Copri e lascia riposare a 20-22°C per 8-12 ore. Sarà pronto quando la superficie è colma di bolle fitte e il centro accenna appena a cedere.`,
       whyItWorks: "L'ambiente liquido favorisce la moltiplicazione rapida dei lieviti e la produzione di enzimi che donano alla pizza una scioglievolezza assoluta al morso."
     });
 
     // Fase 2: Chiusura
     stepsToRender.push({
       step: 2,
-      title: "2. Chiusura dell'Impasto con Poolish",
+      title: `2. Chiusura dell'Impasto con Poolish (${numPanetti} ${unitLabel})`,
       durationMinutes: 15,
       hasTimer: false,
-      instruction: `Versa il poolish attivo nella ciotola, aggiungi l'acqua rimasta e tutta la farina del rinfresco. Inizia a impastare. Appena la massa prende corpo, aggiungi il sale e lavora fino a incordatura perfetta. Unisci l'olio per ultimo se previsto.`,
+      instruction: `Versa tutto il poolish attivo nella ciotola, aggiungi l'acqua rimasta (${prefermentResult.refresh.water}g) e tutta la farina del rinfresco (${prefermentResult.refresh.flour}g). Inizia a impastare. Appena la massa prende corpo, aggiungi ${prefermentResult.refresh.salt}g di sale e lavora fino a incordatura perfetta. ${calcResult.oil > 0 ? `Unisci ${calcResult.oil}g di olio per ultimo.` : ''}`,
       whyItWorks: "Il poolish agisce come un inoculo enzimatico potente che riduce notevolmente i tempi di incordatura finale."
     });
 
@@ -3752,8 +3861,58 @@ function loadAcademyRecipe(recipeId) {
     let stepWhy = step.whyItWorks;
     let hasTimer = step.hasTimer;
 
-    // Se è il passaggio di cottura, personalizzalo dinamicamente con il forno selezionato
-    const isBakingStep = (step.step === recipe.steps.length) || step.title.toLowerCase().includes("cottura");
+    const lowerTitle = stepTitle.toLowerCase();
+    const lowerInst = stepInstruction.toLowerCase();
+
+    // 1. Se è il primo passo di un impasto diretto, arricchiscilo con i grammi esatti
+    if (step.step === 1 && AppState.selectedMethod === "direct") {
+      stepInstruction = `Sciogli ${calcResult.yeast}g di lievito (${calcResult.yeastType}) nell'acqua a temperatura ambiente (${calcResult.water}g). Aggiungi la farina (${calcResult.flour}g) e inizia a impastare. Quando la farina è quasi tutta assorbita, aggiungi ${calcResult.salt}g di sale ${calcResult.oil > 0 ? `e ${calcResult.oil}g di olio a filo` : ''}. Lavora finché il panetto è liscio e compatto (circa 8-10 minuti).`;
+    }
+
+    // 2. Se è il passaggio di STAGLIO / FORMATURA PANETTI -> ADATTAMENTO DINAMICO AL NUMERO DI PANETTI
+    const isStaglioStep = lowerTitle.includes("staglio") || 
+                          lowerTitle.includes("formatura") || 
+                          lowerTitle.includes("porzioni") ||
+                          lowerTitle.includes("panetti") ||
+                          lowerInst.includes("dividi l'impasto") || 
+                          lowerInst.includes("taglia porzioni") ||
+                          lowerInst.includes("panetti da");
+
+    if (isStaglioStep) {
+      if (recipe.id === "pizza_classica" || recipe.id === "pizza_napoletana" || isPizza) {
+        stepTitle = `Staglio e Formatura (${numPanetti} ${numPanetti === 1 ? 'Panetto' : 'Panetti'} da ${weightPanetto}g)`;
+        stepInstruction = `Rovescia l'impasto sul piano di lavoro. Dividi la massa in esattamente ${numPanetti} panetti da ${weightPanetto}g ciascuno (peso totale impasto: ${calcResult.actualTotalWeight || totalWeight}g). Pirlata ciascun panetto sul banco con le mani a coppa per formare una sfera liscia con la base ben chiusa e la superficie tesa. Adagia i ${numPanetti} panetti distanziati su un vassoio o in una cassetta di lievitazione spolverata di semola o farina e copri ermeticamente.`;
+      } else if (recipe.id === "pizza_teglia_romana") {
+        stepTitle = numPanetti === 1 ? `Formatura Panetto in Teglia (${weightPanetto}g)` : `Staglio e Formatura Teglie (${numPanetti} panetti da ${weightPanetto}g)`;
+        stepInstruction = numPanetti === 1 ?
+          `Tira fuori dal frigo, rovescia l'impasto sul banco e forma il panetto rettangolare da circa ${weightPanetto}g senza sgonfiarlo troppo e lascialo a temperatura ambiente per 3-4 ore a completare la lievitazione in una vaschetta unta.` :
+          `Tira fuori dal frigo, rovescia delicatamente l'impasto sul banco e dividilo in ${numPanetti} panetti rettangolari da ${weightPanetto}g ciascuno (uno per ciascuna teglia, peso totale impasto: ${calcResult.actualTotalWeight || totalWeight}g). Manipola con delicatezza per preservare i gas e adagia ciascun panetto in vaschette unte coperte per 3-4 ore a temperatura ambiente.`;
+      } else if (recipe.id === "pane_casereccio" || isPane) {
+        stepTitle = numPanetti === 1 ? `Formatura a Pagnotta (${weightPanetto}g)` : `Pezzatura e Formatura Pagnotte (${numPanetti} da ${weightPanetto}g)`;
+        stepInstruction = numPanetti === 1 ?
+          `Rovescia l'impasto, allargalo a rettangolo, piega i lati verso il centro e arrotola stringendo per formare una pagnotta tesa (boule o batard) da circa ${weightPanetto}g. Spolvera un cestino da lievitazione (banneton) con farina di riso e semola, adagia la pagnotta con la chiusura rivolta verso l'alto. Sigilla in un sacchetto e metti in frigo per 12-16 ore.` :
+          `Rovescia l'impasto sul piano e dividilo in ${numPanetti} pagnotte da circa ${weightPanetto}g ciascuna (peso totale impasto: ${calcResult.actualTotalWeight || totalWeight}g). Allarga ogni porzione a rettangolo, piega i lembi verso il centro e arrotola stringendo per formare sfere o filoni tesi. Spolvera i cestini da lievitazione con semola e adagia ciascuna pagnotta con la chiusura verso l'alto.`;
+      } else if (recipe.id === "focaccia_ligure" || recipe.id === "focaccia_barese") {
+        stepTitle = numPanetti === 1 ? `Stesura e Lievitazione in Teglia (${weightPanetto}g)` : `Divisione e Lievitazione in Teglia (${numPanetti} teglie da ${weightPanetto}g)`;
+        stepInstruction = numPanetti === 1 ?
+          `Ungi generosamente la teglia con olio extravergine. Adagia l'impasto da ${weightPanetto}g al centro, rovescialo in modo che sia ben unto su entrambi i lati e lascialo riposare per 45 minuti per farlo distendere verso i bordi.` :
+          `Ungi generosamente ${numPanetti} teglie con olio extravergine. Dividi l'impasto in ${numPanetti} porzioni da ${weightPanetto}g ciascuna (peso totale: ${calcResult.actualTotalWeight || totalWeight}g). Adagia una porzione al centro di ciascuna teglia, ungi bene entrambi i lati e lascia riposare per 45 minuti per far distendere la pasta.`;
+      } else {
+        stepInstruction = stepInstruction
+          .replace(/\b\d+\s+panetti\b/gi, `${numPanetti} panetti`)
+          .replace(/\bda\s+circa\s+\d+g\b/gi, `da circa ${weightPanetto}g`)
+          .replace(/\bda\s+\d+g\b/gi, `da ${weightPanetto}g`)
+          .replace(/\bporzioni\s+da\s+\d+g\b/gi, `${numPanetti} panetti da ${weightPanetto}g ciascuno`);
+      }
+    }
+
+    // 3. Se è il passaggio di APPRETTO
+    if (lowerTitle.includes("appretto")) {
+      stepInstruction = stepInstruction.replace(/\bi panetti\b/gi, `i ${numPanetti} panetti`);
+    }
+
+    // 4. Se è il passaggio di COTTURA -> personalizzazione forno
+    const isBakingStep = (step.step === stepsToRender.length) || lowerTitle.includes("cottura");
     if (isBakingStep) {
       const oven = (typeof OVENS_DATA !== "undefined" ? OVENS_DATA : []).find(o => o.id === AppState.selectedOvenId);
       if (oven) {
@@ -4224,8 +4383,8 @@ function copyRecipeToClipboard() {
   const recipe = (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA : []).find(r => r.id === AppState.selectedRecipeId) || (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA[0] : null);
   const oven = (typeof OVENS_DATA !== "undefined" ? OVENS_DATA : []).find(o => o.id === AppState.selectedOvenId);
 
-  const numPanetti = document.getElementById("input-num-panetti")?.value || "4";
-  const weightPanetto = document.getElementById("input-weight-panetto")?.value || "260";
+  const numPanetti = document.getElementById("input-num-panetti-val")?.value || document.getElementById("input-num-panetti")?.value || "4";
+  const weightPanetto = document.getElementById("input-weight-panetto-val")?.value || document.getElementById("input-weight-panetto")?.value || "260";
   const totalWeight = document.getElementById("res-total-weight")?.textContent || "1040 g";
   const flour = document.getElementById("res-flour")?.textContent || "";
   const water = document.getElementById("res-water")?.textContent || "";
@@ -4314,8 +4473,8 @@ function printRecipeCard() {
   const recipe = (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA : []).find(r => r.id === AppState.selectedRecipeId) || (typeof RECIPES_DATA !== "undefined" ? RECIPES_DATA[0] : null);
   const oven = (typeof OVENS_DATA !== "undefined" ? OVENS_DATA : []).find(o => o.id === AppState.selectedOvenId);
 
-  const numPanetti = document.getElementById("input-num-panetti")?.value || "4";
-  const weightPanetto = document.getElementById("input-weight-panetto")?.value || "260";
+  const numPanetti = document.getElementById("input-num-panetti-val")?.value || document.getElementById("input-num-panetti")?.value || "4";
+  const weightPanetto = document.getElementById("input-weight-panetto-val")?.value || document.getElementById("input-weight-panetto")?.value || "260";
   const totalWeight = document.getElementById("res-total-weight")?.textContent || "1040 g";
   const flour = document.getElementById("res-flour")?.textContent || "";
   const water = document.getElementById("res-water")?.textContent || "";
